@@ -16,10 +16,9 @@ type TeaConfComponent interface {
 type TeaConfBaseEntity struct {
 	title    string
 	etype    string
-	cname    string
+	id       string // command or group or module name
 	cargs    []string
 	children []TeaConfComponent
-	group    string
 }
 
 func (tcb *TeaConfBaseEntity) getChildrenContainer() []TeaConfComponent {
@@ -47,15 +46,16 @@ func (tcb *TeaConfBaseEntity) GetType() string {
 }
 
 func (tcb *TeaConfBaseEntity) GetGroup() string {
-	return tcb.group
+	return tcb.id
 }
 
 func (tcb *TeaConfBaseEntity) SetGroup(id string) {
-	tcb.group = id
+	tcb.id = id
 }
 
 func (tcb *TeaConfBaseEntity) GetCommandName() string {
-	return tcb.cname
+	// This cannot be a group, so the ID in this case is a command
+	return tcb.id
 }
 
 func (tcb *TeaConfBaseEntity) GetArgs() []string {
@@ -83,9 +83,9 @@ type TeaConfGroup struct {
 	TeaConfBaseEntity
 }
 
-func NewTeaConfGroup(title string) *TeaConfGroup {
+func NewTeaConfGroup(id string) *TeaConfGroup {
 	tcg := new(TeaConfGroup)
-	tcg.title = title
+	tcg.id = id
 	tcg.etype = "group"
 	return tcg
 }
@@ -95,9 +95,10 @@ type TeaConfCmd struct {
 	TeaConfBaseEntity
 }
 
-func NewTeaConfCmd(title string) *TeaConfCmd {
+func NewTeaConfCmd(id, title string) *TeaConfCmd {
 	tc := new(TeaConfCmd)
 	tc.title = title
+	tc.id = id
 	tc.etype = "command"
 	return tc
 }
