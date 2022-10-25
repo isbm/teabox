@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/isbm/go-nanoconf"
 	"github.com/karrick/godirwalk"
 )
@@ -71,12 +70,19 @@ func (tc *TeaConf) initConfig() error {
 
 			if path.Base(pth) == "init.conf" {
 				c := nanoconf.NewConfig(pth)
+				title := c.Root().String("title", "")
+				if title == "" {
+					fmt.Printf("Skipping module: %s (insufficient configuration)\n", pth)
+					return nil
+				}
+
+				m := NewTeaConfModule(title)
+
 				groupId := c.Root().String("group", "")
 				if groupId != "" {
-					group := tc.getGroup(groupId)
-					group.Add(NewTeaConfModule(c.Root().String("title", "")))
+					tc.getGroup(groupId).Add(m)
 				} else {
-					fmt.Printf("%s %s\n", de.ModeType(), pth)
+					tc.modIndex = append(tc.modIndex, m)
 				}
 			}
 			return nil
@@ -84,6 +90,6 @@ func (tc *TeaConf) initConfig() error {
 		Unsorted: true,
 	})
 
-	spew.Dump(tc.modIndex)
+	tc.modIndex = append(tc.modIndex, NewTeaConfCmd("exit", "Exit"))
 	return err
 }
