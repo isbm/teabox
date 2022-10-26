@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 
 	"github.com/isbm/go-nanoconf"
 	"github.com/karrick/godirwalk"
@@ -36,6 +37,14 @@ func NewTeaConf(appname string) *TeaConf {
 	}
 
 	return tc
+}
+
+func (tc *TeaConf) GetTitle() string {
+	return tc.title
+}
+
+func (tc *TeaConf) GetModuleStructure() []TeaConfComponent {
+	return tc.modIndex
 }
 
 // Returns a group by its ID
@@ -82,6 +91,7 @@ func (tc *TeaConf) initConfig() error {
 				if groupId != "" {
 					tc.getGroup(groupId).Add(m)
 				} else {
+					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"])
 					tc.modIndex = append(tc.modIndex, m)
 				}
 			}
@@ -90,6 +100,12 @@ func (tc *TeaConf) initConfig() error {
 		Unsorted: true,
 	})
 
-	tc.modIndex = append(tc.modIndex, NewTeaConfCmd("exit", "Exit"))
+	// Sort all the items, except "Exit", which should be always at the end.
+	sort.Slice(tc.modIndex, func(i, j int) bool {
+		return tc.modIndex[i].GetTitle() < tc.modIndex[j].GetTitle()
+	})
+
+	tc.modIndex = append(tc.modIndex, NewTeaConfCmd("exit", LABEL_EXIT))
+
 	return err
 }
