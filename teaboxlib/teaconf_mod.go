@@ -114,6 +114,18 @@ func NewTeaConfModArg(args map[interface{}]interface{}) *TeaConfModArg {
 	return a
 }
 
+func (a *TeaConfModArg) GetWidgetType() string {
+	return a.argtype
+}
+
+func (a *TeaConfModArg) GetWidgetLabel() string {
+	return a.label
+}
+
+func (a *TeaConfModArg) GetOptions() []*TeaConfCmdOption {
+	return a.options
+}
+
 // TeaConfModCommand is a command within a module chain. It will call whatever command, specified in its path
 // and passed arguments (TeaConfModArg).
 type TeaConfModCommand struct {
@@ -175,6 +187,15 @@ func (tmc *TeaConfModCommand) GetTitle() string {
 
 func (tmc *TeaConfModCommand) GetPath() string {
 	return tmc.path
+}
+
+// If this returns non-empty string, then the command is optional and this string is the message.
+func (tmc *TeaConfModCommand) GetOptionLabel() string {
+	return tmc.option
+}
+
+func (tmc *TeaConfModCommand) GetArguments() []*TeaConfModArg {
+	return tmc.arguments
 }
 
 // TeaConfModule is a wrapper for UI to shape a correct arguments to a target executable, call it, interact with it

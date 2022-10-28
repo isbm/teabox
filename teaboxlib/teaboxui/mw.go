@@ -1,6 +1,8 @@
 package teaboxui
 
 import (
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox/teaboxlib"
@@ -85,22 +87,42 @@ type TeaboxMainWindow struct {
 	// Windows
 	menu *TeaboxMenu
 
-	p    *TeaboxWorkspacePanels
-	conf *teaboxlib.TeaConf
+	p          *TeaboxWorkspacePanels
+	conf       *teaboxlib.TeaConf
+	formWindow *TeaboxArgsForm
 }
 
 func NewTeaboxMainWindow(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMainWindow {
 	tmw := new(TeaboxMainWindow)
 	tmw.appRef = app
+	tmw.appRef.EnableMouse(true)
+	tmw.appRef.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyTab:
+			tmw.appRef.SetFocus(tmw.formWindow.GetWidget())
+		case tcell.KeyBacktab:
+			tmw.appRef.SetFocus(tmw.menu.items)
+		default:
+			//fmt.Println(event.Key())
+		}
+		return event
+	})
 	tmw.SetConfig(conf)
-
 	tmw.title = tmw.conf.GetTitle()
 
 	// Whole workspace
 	tmw.p = NewTeaboxWorkspacePanels(tmw.title)
 
 	tmw.menu = NewTeaboxMenu(tmw.appRef, tmw.conf)
+	tmw.menu.SetOnSelectedFunc(func(i int, li *crtview.ListItem) {
+		tmw.formWindow.ShowForm(strings.TrimSpace(li.GetMainText()))
+	})
 	tmw.p.GetContainer().AddItem(tmw.menu.GetWidget(), teaboxlib.MAIN_MENU_WIDTH, 1, true)
+
+	tmw.formWindow = NewTeaboxArgsForm(tmw.conf)
+	tmw.formWindow.Init()
+
+	tmw.p.GetContainer().AddItem(tmw.formWindow.GetWidget(), 0, 1, false)
 
 	return tmw
 }

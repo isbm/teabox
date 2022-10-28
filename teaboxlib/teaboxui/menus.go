@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
@@ -15,6 +14,7 @@ type TeaboxMenu struct {
 	items  *crtview.List
 	layers *crtview.Panels
 
+	onSelectecFunction func(i int, li *crtview.ListItem)
 	TeaboxBaseWindow
 }
 
@@ -29,6 +29,11 @@ func NewTeaboxMenu(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMen
 
 func (tm *TeaboxMenu) SetConfig(conf *teaboxlib.TeaConf) *TeaboxMenu {
 	tm.conf = conf
+	return tm
+}
+
+func (tm *TeaboxMenu) SetOnSelectedFunc(f func(i int, li *crtview.ListItem)) *TeaboxMenu {
+	tm.onSelectecFunction = f
 	return tm
 }
 
@@ -88,21 +93,22 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 		} else if ref.GetType() == "group" {
 			tm.ShowSubmenu(ref.GetTitle())
 		} else if ref.GetType() == "module" {
-			tm.appref.Stop()
-			spew.Dump(ref.(*teaboxlib.TeaConfModule))
+			tm.onSelectecFunction(i, li)
 		}
 	})
 
 	for idx, mod := range tm.conf.GetModuleStructure() {
+		suff := ""
 		if mod.GetType() == "group" {
 			tm.makeSubmenu(mod)
+			suff = teaboxlib.LABEL_MORE
 		}
 		if mod.GetTitle() == teaboxlib.LABEL_EXIT {
 			tm.items.AddItem(crtview.NewListItem(strings.Repeat(teaboxlib.LABEL_SEP, teaboxlib.MAIN_MENU_WIDTH-2)))
 			tm.items.SetItemEnabled(idx, false)
 		}
 
-		item := crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", mod.GetTitle()))
+		item := crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", mod.GetTitle()+suff))
 		item.SetReference(mod)
 		tm.items.AddItem(item)
 	}
