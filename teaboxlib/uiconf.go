@@ -1,6 +1,8 @@
 package teaboxlib
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"github.com/gdamore/tcell/v2"
+)
 
 // This is a configuration of the UI, filled with the defaults.
 // Use this to patch for own settings/branding
