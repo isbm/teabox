@@ -1,7 +1,6 @@
 package teaboxlib
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -14,7 +13,7 @@ type TeaConfComponent interface {
 	SetTitle(title string)
 	GetId() string
 	GetCommandName() string
-	GetCommands() []map[string]interface{}
+	GetCommands() []*TeaConfModCommand
 	Len() int
 	Add(mod TeaConfComponent) *TeaConfBaseEntity
 	GetChildren() []TeaConfComponent
@@ -81,67 +80,6 @@ func (tcb *TeaConfBaseEntity) GetCommandName() string {
 }
 
 // A single module in the menu root, opens immediately a form to run
-type TeaConfModule struct {
-	conditions []map[string]string
-	commands   []map[string]interface{} // Further decomposition pending
-
-	TeaConfBaseEntity
-}
-
-func NewTeaConfModule(title string) *TeaConfModule {
-	tcm := new(TeaConfModule)
-	tcm.SetTitle(title)
-	tcm.etype = "module"
-
-	return tcm
-}
-
-func (tcf *TeaConfModule) SetCondition(cond interface{}) *TeaConfModule {
-	if cond != nil {
-		tcf.conditions = []map[string]string{}
-		condset, ok := cond.([]interface{})
-		if !ok {
-			panic("Wrong configuration of the module: " + tcf.title)
-		}
-
-		for _, icnd := range condset {
-			cnd := map[string]string{}
-			imcnd := icnd.(map[interface{}]interface{})
-			for k, v := range imcnd {
-				ks, ok := k.(string)
-				if !ok {
-					panic(fmt.Sprintf("Wrong configuration of the module %s: key %v is not string", tcf.title, k))
-				}
-				vs, ok := v.(string)
-				if !ok {
-					panic(fmt.Sprintf("Wrong configuration of the module %s: value %v is not string", tcf.title, v))
-				}
-
-				cnd[ks] = vs
-			}
-			tcf.conditions = append(tcf.conditions, cnd)
-		}
-	}
-	return tcf
-}
-
-func (tcf *TeaConfModule) GetCondition() []map[string]string {
-	return tcf.conditions
-}
-
-func (tcf *TeaConfModule) SetCommands(commands interface{}) *TeaConfModule {
-	if commands != nil {
-		data, ok := commands.([]map[string]interface{})
-		if ok {
-			tcf.commands = data
-		} // XXX: else pop-up somethig or log etc...
-	}
-	return tcf
-}
-
-func (tcf *TeaConfModule) GetCommands() []map[string]interface{} {
-	return tcf.commands
-}
 
 // Group of the modules by a topic
 type TeaConfGroup struct {
@@ -156,7 +94,7 @@ func NewTeaConfGroup(id string) *TeaConfGroup {
 	return tcg
 }
 
-func (tcg *TeaConfGroup) GetCommands() []map[string]interface{} {
+func (tcg *TeaConfGroup) GetCommands() []*TeaConfModCommand {
 	return nil
 }
 
@@ -173,6 +111,6 @@ func NewTeaConfCmd(id, title string) *TeaConfCmd {
 	return tc
 }
 
-func (tc *TeaConfCmd) GetCommands() []map[string]interface{} {
+func (tc *TeaConfCmd) GetCommands() []*TeaConfModCommand {
 	return nil
 }
