@@ -17,6 +17,7 @@ type TeaConfComponent interface {
 	Len() int
 	Add(mod TeaConfComponent) *TeaConfBaseEntity
 	GetChildren() []TeaConfComponent
+	IsGroupContainer() bool
 }
 
 // Entity
@@ -44,6 +45,10 @@ func (tcb *TeaConfBaseEntity) Add(mod TeaConfComponent) *TeaConfBaseEntity {
 
 func (tcb *TeaConfBaseEntity) GetChildren() []TeaConfComponent {
 	return tcb.children
+}
+
+func (tcb *TeaConfBaseEntity) IsGroupContainer() bool {
+	return tcb.children != nil && len(tcb.children) > 0
 }
 
 func (tcb *TeaConfBaseEntity) Len() int {

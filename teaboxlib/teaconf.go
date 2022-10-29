@@ -86,12 +86,14 @@ func (tc *TeaConf) initConfig() error {
 				}
 
 				m := NewTeaConfModule(title)
+				if c.Root().Raw()["commands"] != nil {
+					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"])
+				}
 
 				groupId := c.Root().String("group", "")
-				if groupId != "" {
+				if groupId != "" { // Belongs to group and IS a group. Group has no commands, otherwise it is a module that only belongs to a group
 					tc.getGroup(groupId).Add(m)
 				} else {
-					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"])
 					tc.modIndex = append(tc.modIndex, m)
 				}
 			}

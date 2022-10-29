@@ -68,6 +68,8 @@ func (tm *TeaboxMenu) makeSubmenu(mod teaboxlib.TeaConfComponent) {
 	list.SetSelectedFunc(func(i int, li *crtview.ListItem) {
 		if strings.TrimSpace(li.GetMainText()) == teaboxlib.LABEL_BACK {
 			tm.ShowSubmenu("mainmenu")
+		} else {
+			tm.onSelectecFunction(i, li)
 		}
 	})
 
@@ -90,7 +92,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 		ref := li.GetReference().(teaboxlib.TeaConfComponent)
 		if ref.GetTitle() == teaboxlib.LABEL_EXIT {
 			tm.appref.Stop()
-		} else if ref.GetType() == "group" {
+		} else if ref.IsGroupContainer() {
 			tm.ShowSubmenu(ref.GetTitle())
 		} else if ref.GetType() == "module" {
 			tm.onSelectecFunction(i, li)
@@ -99,7 +101,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 
 	for idx, mod := range tm.conf.GetModuleStructure() {
 		suff := ""
-		if mod.GetType() == "group" {
+		if mod.IsGroupContainer() || mod.GetGroup() != "" {
 			tm.makeSubmenu(mod)
 			suff = teaboxlib.LABEL_MORE
 		}
