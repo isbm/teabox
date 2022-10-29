@@ -85,13 +85,12 @@ func (taf *TeaboxArgsForm) generateForms(mod teaboxlib.TeaConfComponent) {
 				}
 				f.AddDropDownSimple(a.GetWidgetLabel(), 0, nil, opts...)
 			case "text":
-				var v string
+				// Text should have at least one argument, and one optional:
+				// <NAME>            to what option to bind its value, e.g. "--name"
+				// [DEFAULT_TEXT]    A default text, but can be omitted, e.g. "John Smith"
 				if len(a.GetOptions()) > 0 {
-					if data, _ := a.GetOptions()[0].GetValue().(string); data != "" {
-						v = data
-					}
+					f.AddInputField(a.GetWidgetLabel(), a.GetOptions()[0].GetLabel(), 80, nil, nil) // GetLabel() contains default text, at least for now
 				}
-				f.AddInputField(a.GetWidgetLabel(), v, 80, nil, nil)
 			case "toggle":
 				f.AddCheckBox(a.GetWidgetLabel(), "", false, nil)
 			case "silent":
@@ -100,6 +99,8 @@ func (taf *TeaboxArgsForm) generateForms(mod teaboxlib.TeaConfComponent) {
 		break // currently we take only a first command
 	}
 
+	f.SetButtonsAlign(crtview.AlignRight)
+	f.SetButtonsToBottom()
 	f.AddButton("Start", nil)
 	f.AddButton("Cancel", func() {
 		os.Exit(1)
