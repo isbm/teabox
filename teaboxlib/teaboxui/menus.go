@@ -108,6 +108,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 		if mod.GetTitle() == teaboxlib.LABEL_EXIT {
 			tm.items.AddItem(crtview.NewListItem(strings.Repeat(teaboxlib.LABEL_SEP, teaboxlib.MAIN_MENU_WIDTH-2)))
 			tm.items.SetItemEnabled(idx, false)
+			suff = "" // reset suffix for exit
 		}
 
 		item := crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", mod.GetTitle()+suff))
