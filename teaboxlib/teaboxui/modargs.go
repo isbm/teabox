@@ -2,22 +2,102 @@ package teaboxui
 
 import (
 	"fmt"
-	"os"
+	"os/exec"
+	"path"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
+// TeaForm is just an enhancement to crtview.Form to set its unique ID to find it out later.
+type TeaForm struct {
+	cmdId string
+	*crtview.Form
+}
+
+func NewTeaForm() *TeaForm {
+	return &TeaForm{
+		Form: crtview.NewForm(),
+	}
+}
+
+func (tf *TeaForm) SetId(id string) {
+	tf.cmdId = strings.ToLower(strings.ReplaceAll(id, " ", "-"))
+}
+
+func (tf *TeaForm) GetId() string {
+	return tf.cmdId
+}
+
+// TeaFormsPanel is a layer of windows, and it contains many TeaForm instances to switch between them.
+type TeaFormsPanel struct {
+	wout *TeaSTDOUTWindow
+	*crtview.Panels
+}
+
+func NewTeaFormsPanel() *TeaFormsPanel {
+	tfp := &TeaFormsPanel{
+		Panels: crtview.NewPanels(),
+	}
+
+	tfp.wout = NewTeaSTDOUTWindow()
+	tfp.AddPanel("_stdout", tfp.wout, true, false)
+
+	return tfp
+}
+
+func (tfp *TeaFormsPanel) ShowStdoutWindow() {
+	tfp.SetCurrentPanel("_stdout")
+}
+
+func (tfp *TeaFormsPanel) GetStdoutWindow() *TeaSTDOUTWindow {
+	return tfp.wout
+}
+
+func (tfp *TeaFormsPanel) AddForm(title string) *TeaForm {
+	f := NewTeaForm()
+
+	f.SetTitle(title)
+	f.SetId(f.GetTitle())
+
+	f.SetBorder(true)
+
+	// Colors
+	f.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
+	f.SetFieldTextColor(tcell.ColorWhite)
+	f.SetFieldBackgroundColor(teaboxlib.WORKSPACE_HEADER)
+	f.SetFieldBackgroundColorFocused(tcell.ColorGreenYellow)
+	f.SetFieldTextColorFocused(teaboxlib.WORKSPACE_BACKGROUND)
+
+	f.SetButtonBackgroundColor(teaboxlib.FORM_BUTTON_BACKGROUND)
+	f.SetButtonBackgroundColorFocused(teaboxlib.FORM_BUTTON_BACKGROUND_SELECTED)
+	f.SetButtonTextColor(teaboxlib.FORM_BUTTON_TEXT)
+	f.SetButtonTextColorFocused(teaboxlib.FORM_BUTTON_TEXT_SELECTED)
+
+	// Buttons align
+	f.SetButtonsAlign(crtview.AlignRight)
+	f.SetButtonsToBottom()
+
+	tfp.AddPanel(f.GetId(), f, true, tfp.GetPanelCount() == 1)
+
+	return f
+}
+
+// TeaboxArgsForm contains a layers with TeaForms on it, also their output, intro screen, callback screens etc.
 type TeaboxArgsForm struct {
 	conf *teaboxlib.TeaConf
 	TeaboxBaseWindow
 	layers *crtview.Panels
+
+	modCmdIndex map[string]*teaboxlib.TeaConfModCommand
 }
 
 func NewTeaboxArgsForm(conf *teaboxlib.TeaConf) *TeaboxArgsForm {
 	taf := new(TeaboxArgsForm)
 	taf.conf = conf
+	taf.modCmdIndex = map[string]*teaboxlib.TeaConfModCommand{}
 
 	return taf
 }
@@ -39,7 +119,7 @@ func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	intro.SetText("\n\n\n\nSelect option from the menu on the left")
 	intro.SetTextAlign(crtview.AlignCenter)
 
-	taf.layers.AddPanel("__root__", intro, true, true)
+	taf.layers.AddPanel("_intro-screen", intro, true, true)
 
 	for _, mod := range taf.conf.GetModuleStructure() {
 		taf.generateForms(mod)
@@ -48,7 +128,17 @@ func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	return taf
 }
 
-func (taf *TeaboxArgsForm) generateForms(mod teaboxlib.TeaConfComponent) {
+// ShowIntroScreen hides current form and shows the statrup one
+func (taf *TeaboxArgsForm) ShowIntroScreen() {
+	taf.layers.SetCurrentPanel("_intro-screen")
+}
+
+func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
+	if c.GetType() != "module" {
+		return
+	}
+
+	mod := c.(*teaboxlib.TeaConfModule)
 	if mod.IsGroupContainer() {
 		for _, x := range mod.GetChildren() {
 			taf.generateForms(x)
@@ -59,21 +149,19 @@ func (taf *TeaboxArgsForm) generateForms(mod teaboxlib.TeaConfComponent) {
 		return
 	}
 
-	f := crtview.NewForm()
-	f.SetBorder(true)
-	f.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
-	f.SetFieldTextColor(tcell.ColorWhite)
-	f.SetFieldBackgroundColor(teaboxlib.WORKSPACE_HEADER)
-	f.SetFieldBackgroundColorFocused(tcell.ColorGreenYellow)
-	f.SetFieldTextColorFocused(teaboxlib.WORKSPACE_BACKGROUND)
-
-	f.SetButtonBackgroundColor(teaboxlib.FORM_BUTTON_BACKGROUND)
-	f.SetButtonBackgroundColorFocused(teaboxlib.FORM_BUTTON_BACKGROUND_SELECTED)
-	f.SetButtonTextColor(teaboxlib.FORM_BUTTON_TEXT)
-	f.SetButtonTextColorFocused(teaboxlib.FORM_BUTTON_TEXT_SELECTED)
+	formPanel := NewTeaFormsPanel()
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
-		f.SetTitle(fmt.Sprintf("%s - %s", mod.GetTitle(), cmd.GetTitle()))
+		formTitle := fmt.Sprintf("%s - %s", mod.GetTitle(), cmd.GetTitle())
+		f := formPanel.AddForm(formTitle)
+
+		// Update relative path to its absolute
+		if !strings.HasPrefix(cmd.GetCommandPath(), "/") {
+			cmd.SetCommandPath(path.Join(mod.GetModulePath(), cmd.GetCommandPath()))
+		}
+
+		taf.modCmdIndex[f.GetId()] = cmd
+
 		for _, a := range cmd.GetArguments() {
 			switch a.GetWidgetType() {
 			case "dropdown", "list":
@@ -96,17 +184,28 @@ func (taf *TeaboxArgsForm) generateForms(mod teaboxlib.TeaConfComponent) {
 			case "silent":
 			}
 		}
+
+		// Or next/previous, if not the last form
+		f.AddButton("Start", func() {
+			formPanel.ShowStdoutWindow()
+			go func() {
+				cmd := exec.Command(taf.modCmdIndex[f.GetId()].GetCommandPath(), "/opt/bin/blah")
+				cmd.Stdout = formPanel.GetStdoutWindow().GetWindow()
+				cmd.Stderr = formPanel.GetStdoutWindow().GetWindow()
+				if err := cmd.Run(); err != nil {
+					GetTeaboxMainWindow().GetApp().Stop()
+					fmt.Println("Error:", err)
+				}
+			}()
+		})
+
+		f.AddButton("Cancel", func() {
+			GetTeaboxMainWindow().GetApp().SetFocus(GetTeaboxMainWindow().GetMainMenu().GetWidget())
+			taf.ShowIntroScreen()
+		})
+
 		break // currently we take only a first command
 	}
 
-	f.SetButtonsAlign(crtview.AlignRight)
-	f.SetButtonsToBottom()
-	f.AddButton("Start", nil)
-	f.AddButton("Cancel", func() {
-		os.Exit(1)
-	})
-
-	fmt.Println("Adding", mod.GetTitle())
-	taf.layers.AddPanel(mod.GetTitle(), f, true, false)
-
+	taf.layers.AddPanel(mod.GetTitle(), formPanel, true, false)
 }

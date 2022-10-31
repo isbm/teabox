@@ -185,8 +185,12 @@ func (tmc *TeaConfModCommand) GetTitle() string {
 	return tmc.title
 }
 
-func (tmc *TeaConfModCommand) GetPath() string {
+func (tmc *TeaConfModCommand) GetCommandPath() string {
 	return tmc.path
+}
+
+func (tmc *TeaConfModCommand) SetCommandPath(p string) {
+	tmc.path = p
 }
 
 // If this returns non-empty string, then the command is optional and this string is the message.

@@ -18,14 +18,17 @@ type TeaConfComponent interface {
 	Add(mod TeaConfComponent) *TeaConfBaseEntity
 	GetChildren() []TeaConfComponent
 	IsGroupContainer() bool
+	SetModulePath(string)
+	GetModulePath() string
 }
 
 // Entity
 type TeaConfBaseEntity struct {
-	title    string
-	etype    string
-	id       string // command or group or module name
-	children []TeaConfComponent
+	title      string
+	etype      string
+	id         string // command or group or module name
+	children   []TeaConfComponent
+	modulePath string
 }
 
 func (tcb *TeaConfBaseEntity) getChildrenContainer() []TeaConfComponent {
@@ -33,6 +36,14 @@ func (tcb *TeaConfBaseEntity) getChildrenContainer() []TeaConfComponent {
 		tcb.children = []TeaConfComponent{}
 	}
 	return tcb.children
+}
+
+func (tcb *TeaConfBaseEntity) SetModulePath(p string) {
+	tcb.modulePath = p
+}
+
+func (tcb *TeaConfBaseEntity) GetModulePath() string {
+	return tcb.modulePath
 }
 
 func (tcb *TeaConfBaseEntity) Add(mod TeaConfComponent) *TeaConfBaseEntity {

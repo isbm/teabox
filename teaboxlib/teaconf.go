@@ -86,6 +86,7 @@ func (tc *TeaConf) initConfig() error {
 				}
 
 				m := NewTeaConfModule(title)
+				m.modulePath = path.Dir(pth)
 				if c.Root().Raw()["commands"] != nil {
 					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"])
 				}

@@ -80,6 +80,19 @@ func (tbp *TeaboxWorkspacePanels) Draw(screen tcell.Screen) {
 	}
 }
 
+var _teaboxMainWindowRef *TeaboxMainWindow
+
+func InitTeaboxMainWindow(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMainWindow {
+	if _teaboxMainWindowRef == nil {
+		_teaboxMainWindowRef = NewTeaboxMainWindow(app, conf)
+	}
+	return _teaboxMainWindowRef
+}
+
+func GetTeaboxMainWindow() *TeaboxMainWindow {
+	return _teaboxMainWindowRef
+}
+
 type TeaboxMainWindow struct {
 	appRef *crtview.Application
 	title  string
@@ -135,6 +148,16 @@ func (tmw *TeaboxMainWindow) SetConfig(conf *teaboxlib.TeaConf) *TeaboxMainWindo
 
 func (tmw *TeaboxMainWindow) GetContent() crtview.Primitive {
 	return tmw.p
+}
+
+// GetMainMenu returns the main menu instance.
+func (tmw *TeaboxMainWindow) GetMainMenu() *TeaboxMenu {
+	return tmw.menu
+}
+
+// GetApp returns the main crtview.Application instance.
+func (tmw *TeaboxMainWindow) GetApp() *crtview.Application {
+	return tmw.appRef
 }
 
 /*
