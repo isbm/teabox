@@ -1,6 +1,8 @@
-package teaboxlib
+package teabox
 
-import "github.com/isbm/crtview"
+import (
+	"github.com/isbm/crtview"
+)
 
 var _appRef *crtview.Application
 
