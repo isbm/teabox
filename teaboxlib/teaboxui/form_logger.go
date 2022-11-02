@@ -1,6 +1,8 @@
 package teaboxui
 
 import (
+	"net"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox"
@@ -56,4 +58,10 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 
 func (tsw *TeaSTDOUTWindow) GetWindow() *crtview.TextView {
 	return tsw.w
+}
+
+func (tsw *TeaSTDOUTWindow) Action() func(net.Conn) {
+	return func(c net.Conn) {
+
+	}
 }

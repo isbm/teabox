@@ -88,16 +88,14 @@ func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *TeaForm {
 
 // TeaboxArgsForm contains a layers with TeaForms on it, also their output, intro screen, callback screens etc.
 type TeaboxArgsForm struct {
-	conf *teaboxlib.TeaConf
 	TeaboxBaseWindow
 	layers *crtview.Panels
 
 	modCmdIndex map[string]*teaboxlib.TeaConfModCommand
 }
 
-func NewTeaboxArgsForm(conf *teaboxlib.TeaConf) *TeaboxArgsForm {
+func NewTeaboxArgsForm() *TeaboxArgsForm {
 	taf := new(TeaboxArgsForm)
-	taf.conf = conf
 	taf.modCmdIndex = map[string]*teaboxlib.TeaConfModCommand{}
 
 	return taf
@@ -122,7 +120,7 @@ func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 
 	taf.layers.AddPanel("_intro-screen", intro, true, true)
 
-	for _, mod := range taf.conf.GetModuleStructure() {
+	for _, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
 		taf.generateForms(mod)
 	}
 
@@ -185,6 +183,14 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 		f.AddButton("Start", func() {
 			formPanel.ShowStdoutWindow()
 			go func() {
+				// Open Unix socket for this very session
+				if mod.GetCallbackPath() != "" {
+					if err := teabox.GetTeaboxApp().GetCallbackServer().Start(mod.GetCallbackPath()); err != nil {
+						teabox.GetTeaboxApp().Stop()
+						fmt.Println(err) // That would be a general system problem
+					}
+				}
+
 				cmd := exec.Command(taf.modCmdIndex[f.GetId()].GetCommandPath(), "/opt/bin/blah")
 				cmd.Stdout = formPanel.GetStdoutWindow().GetWindow()
 				cmd.Stderr = formPanel.GetStdoutWindow().GetWindow()
@@ -192,6 +198,12 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 					teabox.GetTeaboxApp().Stop()
 					fmt.Println("Error:", err)
 				}
+
+				// Stop Unix socket
+				if teabox.GetTeaboxApp().GetCallbackServer().IsRunning() {
+					teabox.GetTeaboxApp().GetCallbackServer().Stop()
+				}
+				formPanel.SetCurrentPanel(f.GetId())
 			}()
 		})
 

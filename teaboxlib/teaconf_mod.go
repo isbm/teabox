@@ -205,6 +205,7 @@ func (tmc *TeaConfModCommand) GetArguments() []*TeaConfModArg {
 // TeaConfModule is a wrapper for UI to shape a correct arguments to a target executable, call it, interact with it
 // and provide results for futher processing within a chain.
 type TeaConfModule struct {
+	socketPath string
 	conditions []map[string]string
 	commands   []*TeaConfModCommand
 
@@ -217,6 +218,17 @@ func NewTeaConfModule(title string) *TeaConfModule {
 	tcm.etype = "module"
 
 	return tcm
+}
+
+// SetCallbackPath sets a physical path on the disk for the Unix socket to communicate between the processes.
+func (tcf *TeaConfModule) SetCallbackPath(pt string) *TeaConfModule {
+	tcf.socketPath = pt
+	return tcf
+}
+
+// GetCallbackPath returns a physical path on the disk for the Unix socket to communicate between the processes.
+func (tcf *TeaConfModule) GetCallbackPath() string {
+	return tcf.socketPath
 }
 
 // SetCondition sets described conditions, under which module is running or not.

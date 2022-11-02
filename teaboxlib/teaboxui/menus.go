@@ -11,7 +11,6 @@ import (
 )
 
 type TeaboxMenu struct {
-	conf   *teaboxlib.TeaConf
 	items  *crtview.List
 	layers *crtview.Panels
 
@@ -19,16 +18,10 @@ type TeaboxMenu struct {
 	TeaboxBaseWindow
 }
 
-func NewTeaboxMenu(conf *teaboxlib.TeaConf) *TeaboxMenu {
+func NewTeaboxMenu() *TeaboxMenu {
 	tm := new(TeaboxMenu)
-	tm.conf = conf
 	tm.Init()
 
-	return tm
-}
-
-func (tm *TeaboxMenu) SetConfig(conf *teaboxlib.TeaConf) *TeaboxMenu {
-	tm.conf = conf
 	return tm
 }
 
@@ -99,7 +92,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 		}
 	})
 
-	for idx, mod := range tm.conf.GetModuleStructure() {
+	for idx, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
 		suff := ""
 		if mod.IsGroupContainer() || mod.GetGroup() != "" {
 			tm.makeSubmenu(mod)

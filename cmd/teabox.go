@@ -12,9 +12,8 @@ import (
 func main() {
 	appname := path.Base(os.Args[0])
 
-	app := teabox.GetTeaboxApp()
-	root := teaboxui.InitTeaboxMainWindow(app, teaboxlib.NewTeaConf(appname))
-	app.SetRoot(root.GetContent(), true)
+	app := teabox.GetTeaboxApp().SetGlobalConfig(teaboxlib.NewTeaConf(appname))
+	app.SetRoot(teaboxui.InitTeaboxMainWindow().GetContent(), true)
 
 	if err := app.Run(); err != nil {
 		panic(err)
