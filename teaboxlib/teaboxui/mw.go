@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
@@ -82,7 +83,7 @@ func (tbp *TeaboxWorkspacePanels) Draw(screen tcell.Screen) {
 
 var _teaboxMainWindowRef *TeaboxMainWindow
 
-func InitTeaboxMainWindow(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMainWindow {
+func InitTeaboxMainWindow(app *teabox.TeaboxApplication, conf *teaboxlib.TeaConf) *TeaboxMainWindow {
 	if _teaboxMainWindowRef == nil {
 		_teaboxMainWindowRef = NewTeaboxMainWindow(app, conf)
 	}
@@ -94,7 +95,7 @@ func GetTeaboxMainWindow() *TeaboxMainWindow {
 }
 
 type TeaboxMainWindow struct {
-	appRef *crtview.Application
+	appRef *teabox.TeaboxApplication
 	title  string
 
 	// Windows
@@ -105,7 +106,7 @@ type TeaboxMainWindow struct {
 	formWindow *TeaboxArgsForm
 }
 
-func NewTeaboxMainWindow(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMainWindow {
+func NewTeaboxMainWindow(app *teabox.TeaboxApplication, conf *teaboxlib.TeaConf) *TeaboxMainWindow {
 	tmw := new(TeaboxMainWindow)
 	tmw.appRef = app
 	tmw.appRef.EnableMouse(true)
@@ -126,7 +127,7 @@ func NewTeaboxMainWindow(app *crtview.Application, conf *teaboxlib.TeaConf) *Tea
 	// Whole workspace
 	tmw.p = NewTeaboxWorkspacePanels(tmw.title)
 
-	tmw.menu = NewTeaboxMenu(tmw.appRef, tmw.conf)
+	tmw.menu = NewTeaboxMenu(tmw.conf)
 	tmw.menu.SetOnSelectedFunc(func(i int, li *crtview.ListItem) {
 		tmw.formWindow.ShowForm(strings.TrimSpace(li.GetMainText()))
 	})
@@ -153,11 +154,6 @@ func (tmw *TeaboxMainWindow) GetContent() crtview.Primitive {
 // GetMainMenu returns the main menu instance.
 func (tmw *TeaboxMainWindow) GetMainMenu() *TeaboxMenu {
 	return tmw.menu
-}
-
-// GetApp returns the main crtview.Application instance.
-func (tmw *TeaboxMainWindow) GetApp() *crtview.Application {
-	return tmw.appRef
 }
 
 /*

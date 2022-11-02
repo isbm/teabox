@@ -4,11 +4,17 @@ import (
 	"github.com/isbm/crtview"
 )
 
-var _appRef *crtview.Application
+var _appRef *TeaboxApplication
 
-func GetTeaboxApp() *crtview.Application {
+type TeaboxApplication struct {
+	*crtview.Application
+}
+
+func GetTeaboxApp() *TeaboxApplication {
 	if _appRef == nil {
-		_appRef = crtview.NewApplication()
+		_appRef = &TeaboxApplication{
+			Application: crtview.NewApplication(),
+		}
 	}
 	return _appRef
 }

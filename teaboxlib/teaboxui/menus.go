@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
@@ -18,10 +19,9 @@ type TeaboxMenu struct {
 	TeaboxBaseWindow
 }
 
-func NewTeaboxMenu(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMenu {
+func NewTeaboxMenu(conf *teaboxlib.TeaConf) *TeaboxMenu {
 	tm := new(TeaboxMenu)
 	tm.conf = conf
-	tm.appref = app
 	tm.Init()
 
 	return tm
@@ -91,7 +91,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 	tm.items.SetSelectedFunc(func(i int, li *crtview.ListItem) {
 		ref := li.GetReference().(teaboxlib.TeaConfComponent)
 		if ref.GetTitle() == teaboxlib.LABEL_EXIT {
-			tm.appref.Stop()
+			teabox.GetTeaboxApp().Stop()
 		} else if ref.IsGroupContainer() {
 			tm.ShowSubmenu(ref.GetTitle())
 		} else if ref.GetType() == "module" {

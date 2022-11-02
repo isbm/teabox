@@ -8,6 +8,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
@@ -152,8 +153,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	formPanel := NewTeaFormsPanel()
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
-		formTitle := fmt.Sprintf("%s - %s", mod.GetTitle(), cmd.GetTitle())
-		f := formPanel.AddForm(formTitle)
+		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle())
 
 		// Update relative path to its absolute
 		if !strings.HasPrefix(cmd.GetCommandPath(), "/") {
@@ -193,14 +193,14 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 				cmd.Stdout = formPanel.GetStdoutWindow().GetWindow()
 				cmd.Stderr = formPanel.GetStdoutWindow().GetWindow()
 				if err := cmd.Run(); err != nil {
-					GetTeaboxMainWindow().GetApp().Stop()
+					teabox.GetTeaboxApp().Stop()
 					fmt.Println("Error:", err)
 				}
 			}()
 		})
 
 		f.AddButton("Cancel", func() {
-			GetTeaboxMainWindow().GetApp().SetFocus(GetTeaboxMainWindow().GetMainMenu().GetWidget())
+			teabox.GetTeaboxApp().SetFocus(GetTeaboxMainWindow().GetMainMenu().GetWidget())
 			taf.ShowIntroScreen()
 		})
 

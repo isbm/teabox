@@ -3,6 +3,7 @@ package teaboxui
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox"
 )
 
 /*
@@ -39,7 +40,7 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.w.SetTextColor(tcell.ColorBlack)
 	c.w.SetSkipCursorReturn(true)
 	c.w.SetChangedFunc(func() {
-		GetTeaboxMainWindow().GetApp().Draw()
+		teabox.GetTeaboxApp().Draw()
 	})
 	c.AddItem(c.w, 0, 1, true)
 
