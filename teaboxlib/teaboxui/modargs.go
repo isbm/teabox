@@ -57,11 +57,11 @@ func (tfp *TeaFormsPanel) GetStdoutWindow() *TeaSTDOUTWindow {
 	return tfp.wout
 }
 
-func (tfp *TeaFormsPanel) AddForm(title string) *TeaForm {
+func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *TeaForm {
 	f := NewTeaForm()
 
-	f.SetTitle(title)
-	f.SetId(f.GetTitle())
+	f.SetTitle(fmt.Sprintf("%s - %s", title, subtitle))
+	f.SetId(title)
 
 	f.SetBorder(true)
 
@@ -135,21 +135,17 @@ func (taf *TeaboxArgsForm) ShowIntroScreen() {
 }
 
 func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
-	if c.GetType() != "module" {
-		return
-	}
-
-	mod := c.(*teaboxlib.TeaConfModule)
-	if mod.IsGroupContainer() {
-		for _, x := range mod.GetChildren() {
+	if c.IsGroupContainer() {
+		for _, x := range c.GetChildren() {
 			taf.generateForms(x)
 		}
 	}
 
-	if len(mod.GetCommands()) < 1 {
+	if len(c.GetCommands()) < 1 {
 		return
 	}
 
+	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
 	formPanel := NewTeaFormsPanel()
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
