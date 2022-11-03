@@ -221,8 +221,10 @@ func NewTeaConfModule(title string) *TeaConfModule {
 }
 
 // SetCallbackPath sets a physical path on the disk for the Unix socket to communicate between the processes.
-func (tcf *TeaConfModule) SetCallbackPath(pt string) *TeaConfModule {
-	tcf.socketPath = pt
+func (tcf *TeaConfModule) SetCallbackPath(pt interface{}) *TeaConfModule {
+	if v, ok := pt.(string); ok {
+		tcf.socketPath = v
+	}
 	return tcf
 }
 

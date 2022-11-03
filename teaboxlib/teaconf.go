@@ -88,7 +88,7 @@ func (tc *TeaConf) initConfig() error {
 				m := NewTeaConfModule(title)
 				m.modulePath = path.Dir(pth)
 				if c.Root().Raw()["commands"] != nil {
-					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"])
+					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"]).SetCallbackPath(c.Root().Raw()["callback"])
 				}
 
 				groupId := c.Root().String("group", "")
