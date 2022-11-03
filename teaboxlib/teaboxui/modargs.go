@@ -9,6 +9,7 @@ import (
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
+	"gitlab.com/isbm/teabox/teaboxlib/teaboxui/teawidgets"
 )
 
 // TeaForm is just an enhancement to crtview.Form to set its unique ID to find it out later.
@@ -33,7 +34,7 @@ func (tf *TeaForm) GetId() string {
 
 // TeaFormsPanel is a layer of windows, and it contains many TeaForm instances to switch between them.
 type TeaFormsPanel struct {
-	wout *TeaSTDOUTWindow
+	wout *teawidgets.TeaSTDOUTWindow
 	*crtview.Panels
 }
 
@@ -42,7 +43,7 @@ func NewTeaFormsPanel() *TeaFormsPanel {
 		Panels: crtview.NewPanels(),
 	}
 
-	tfp.wout = NewTeaSTDOUTWindow()
+	tfp.wout = teawidgets.NewTeaSTDOUTWindow()
 	tfp.AddPanel("_stdout", tfp.wout, true, false)
 
 	return tfp
@@ -52,7 +53,7 @@ func (tfp *TeaFormsPanel) ShowStdoutWindow() {
 	tfp.SetCurrentPanel("_stdout")
 }
 
-func (tfp *TeaFormsPanel) GetStdoutWindow() *TeaSTDOUTWindow {
+func (tfp *TeaFormsPanel) GetStdoutWindow() *teawidgets.TeaSTDOUTWindow {
 	return tfp.wout
 }
 

@@ -1,4 +1,4 @@
-package teaboxui
+package teawidgets
 
 import (
 	"fmt"
