@@ -2,7 +2,6 @@ package teaboxui
 
 import (
 	"fmt"
-	"os/exec"
 	"path"
 	"strings"
 
@@ -183,25 +182,9 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 		f.AddButton("Start", func() {
 			formPanel.ShowStdoutWindow()
 			go func() {
-				// Open Unix socket for this very session
-				if mod.GetCallbackPath() != "" {
-					if err := teabox.GetTeaboxApp().GetCallbackServer().Start(mod.GetCallbackPath()); err != nil {
-						teabox.GetTeaboxApp().Stop()
-						fmt.Println(err) // That would be a general system problem
-					}
-				}
-
-				cmd := exec.Command(taf.modCmdIndex[f.GetId()].GetCommandPath(), "/opt/bin/blah")
-				cmd.Stdout = formPanel.GetStdoutWindow().GetWindow()
-				cmd.Stderr = formPanel.GetStdoutWindow().GetWindow()
-				if err := cmd.Run(); err != nil {
+				if err := formPanel.wout.Action(mod.GetCallbackPath(), taf.modCmdIndex[f.GetId()].GetCommandPath(), "some-argument-here"); err != nil {
 					teabox.GetTeaboxApp().Stop()
 					fmt.Println("Error:", err)
-				}
-
-				// Stop Unix socket
-				if teabox.GetTeaboxApp().GetCallbackServer().IsRunning() {
-					teabox.GetTeaboxApp().GetCallbackServer().Stop()
 				}
 				formPanel.SetCurrentPanel(f.GetId())
 			}()

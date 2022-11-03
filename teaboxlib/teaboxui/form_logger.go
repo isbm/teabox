@@ -1,7 +1,8 @@
 package teaboxui
 
 import (
-	"net"
+	"fmt"
+	"os/exec"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
@@ -60,8 +61,26 @@ func (tsw *TeaSTDOUTWindow) GetWindow() *crtview.TextView {
 	return tsw.w
 }
 
-func (tsw *TeaSTDOUTWindow) Action() func(net.Conn) {
-	return func(c net.Conn) {
-
+func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath, cmdargs string) error {
+	if callback != "" {
+		if err := teabox.GetTeaboxApp().GetCallbackServer().Start(callback); err != nil {
+			teabox.GetTeaboxApp().Stop()
+			fmt.Println(err) // That would be a general system problem
+		}
 	}
+
+	cmd := exec.Command(cmdpath, cmdargs)
+	cmd.Stdout = tsw.GetWindow()
+	cmd.Stderr = tsw.GetWindow()
+	if err := cmd.Run(); err != nil {
+		teabox.GetTeaboxApp().Stop()
+		fmt.Println("Error:", err)
+	}
+
+	// Stop Unix socket
+	if teabox.GetTeaboxApp().GetCallbackServer().IsRunning() {
+		return teabox.GetTeaboxApp().GetCallbackServer().Stop()
+	}
+
+	return nil
 }
