@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -10,6 +11,11 @@ import (
 )
 
 func main() {
+	if os.Getenv("TERM") != "xterm-256color" {
+		fmt.Println("Terminal should work in 256 color mode.")
+		os.Exit(1)
+	}
+
 	appname := path.Base(os.Args[0])
 
 	app := teabox.GetTeaboxApp().SetGlobalConfig(teaboxlib.NewTeaConf(appname))
