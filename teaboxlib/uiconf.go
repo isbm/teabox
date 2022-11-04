@@ -16,11 +16,11 @@ var LABEL_SEP = "─"
 var LABEL_MORE = "…"
 
 // Colors theme
-var WORKSPACE_BACKGROUND = tcell.ColorDarkGreen
-var WORKSPACE_HEADER = tcell.ColorGreen
+var WORKSPACE_BACKGROUND = EGAColorGreen
+var WORKSPACE_HEADER = EGAColorBrightGreen
 var WORKSPACE_HEADER_TEXT = tcell.ColorBlack
 
-var FORM_BUTTON_BACKGROUND = tcell.ColorBlack
-var FORM_BUTTON_BACKGROUND_SELECTED = tcell.ColorLightGray
-var FORM_BUTTON_TEXT = tcell.ColorLightGray
-var FORM_BUTTON_TEXT_SELECTED = tcell.ColorBlack
+var FORM_BUTTON_BACKGROUND = EGAColorBlack
+var FORM_BUTTON_BACKGROUND_SELECTED = EGAColorWhite
+var FORM_BUTTON_TEXT = EGAColorWhite
+var FORM_BUTTON_TEXT_SELECTED = EGAColorBlack
