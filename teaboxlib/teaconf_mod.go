@@ -143,7 +143,7 @@ func NewTeaConfModArg(args map[interface{}]interface{}) *TeaConfModArg {
 				a.options = append(a.options, NewTeaConfCmdOption(opt))
 			}
 		case "name":
-			a.name = wd.(string)
+			a.name = wd.(string) // Add as-is. If it is with double-dash, then it is so.
 		}
 	}
 
@@ -178,6 +178,12 @@ func (a *TeaConfModArg) GetWidgetLabel() string {
 
 func (a *TeaConfModArg) GetOptions() []*TeaConfCmdOption {
 	return a.options
+}
+
+// GetArgName is a name of an argument target, e.g. "--path".
+// Name is unchanged, because various commands can have anything.
+func (a *TeaConfModArg) GetArgName() string {
+	return a.name
 }
 
 // TeaConfModCommand is a command within a module chain. It will call whatever command, specified in its path
