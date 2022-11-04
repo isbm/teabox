@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
 type TeaboxMenu struct {
-	conf   *teaboxlib.TeaConf
 	items  *crtview.List
 	layers *crtview.Panels
 
@@ -18,17 +18,10 @@ type TeaboxMenu struct {
 	TeaboxBaseWindow
 }
 
-func NewTeaboxMenu(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMenu {
+func NewTeaboxMenu() *TeaboxMenu {
 	tm := new(TeaboxMenu)
-	tm.conf = conf
-	tm.appref = app
 	tm.Init()
 
-	return tm
-}
-
-func (tm *TeaboxMenu) SetConfig(conf *teaboxlib.TeaConf) *TeaboxMenu {
-	tm.conf = conf
 	return tm
 }
 
@@ -91,7 +84,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 	tm.items.SetSelectedFunc(func(i int, li *crtview.ListItem) {
 		ref := li.GetReference().(teaboxlib.TeaConfComponent)
 		if ref.GetTitle() == teaboxlib.LABEL_EXIT {
-			tm.appref.Stop()
+			teabox.GetTeaboxApp().Stop()
 		} else if ref.IsGroupContainer() {
 			tm.ShowSubmenu(ref.GetTitle())
 		} else if ref.GetType() == "module" {
@@ -99,7 +92,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 		}
 	})
 
-	for idx, mod := range tm.conf.GetModuleStructure() {
+	for idx, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
 		suff := ""
 		if mod.IsGroupContainer() || mod.GetGroup() != "" {
 			tm.makeSubmenu(mod)
@@ -108,6 +101,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 		if mod.GetTitle() == teaboxlib.LABEL_EXIT {
 			tm.items.AddItem(crtview.NewListItem(strings.Repeat(teaboxlib.LABEL_SEP, teaboxlib.MAIN_MENU_WIDTH-2)))
 			tm.items.SetItemEnabled(idx, false)
+			suff = "" // reset suffix for exit
 		}
 
 		item := crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", mod.GetTitle()+suff))

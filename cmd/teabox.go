@@ -1,18 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 
-	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 	"gitlab.com/isbm/teabox/teaboxlib/teaboxui"
 )
 
 func main() {
-	app := crtview.NewApplication()
+	if os.Getenv("TERM") != "xterm-256color" {
+		fmt.Println("Terminal should work in 256 color mode.")
+		os.Exit(1)
+	}
+
 	appname := path.Base(os.Args[0])
-	app.SetRoot(teaboxui.NewTeaboxMainWindow(app, teaboxlib.NewTeaConf(appname)).GetContent(), true)
+
+	app := teabox.GetTeaboxApp().SetGlobalConfig(teaboxlib.NewTeaConf(appname))
+	app.SetRoot(teaboxui.InitTeaboxMainWindow().GetContent(), true)
+
 	if err := app.Run(); err != nil {
 		panic(err)
 	}

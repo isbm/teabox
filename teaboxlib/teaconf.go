@@ -6,6 +6,7 @@ import (
 	"path"
 	"sort"
 
+	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/isbm/go-nanoconf"
 	"github.com/karrick/godirwalk"
 )
@@ -24,6 +25,7 @@ type TeaConf struct {
 	initConfPath string
 
 	modIndex []TeaConfComponent
+	wzlib_logger.WzLogger
 }
 
 func NewTeaConf(appname string) *TeaConf {
@@ -78,6 +80,12 @@ func (tc *TeaConf) initConfig() error {
 			}
 
 			if path.Base(pth) == "init.conf" {
+				defer func() {
+					if err := recover(); err != nil {
+						tc.GetLogger().Errorf("Error loading %s: %s", pth, err)
+						panic(err)
+					}
+				}()
 				c := nanoconf.NewConfig(pth)
 				title := c.Root().String("title", "")
 				if title == "" {
@@ -86,8 +94,9 @@ func (tc *TeaConf) initConfig() error {
 				}
 
 				m := NewTeaConfModule(title)
+				m.modulePath = path.Dir(pth)
 				if c.Root().Raw()["commands"] != nil {
-					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"])
+					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"]).SetCallbackPath(c.Root().Raw()["callback"])
 				}
 
 				groupId := c.Root().String("group", "")

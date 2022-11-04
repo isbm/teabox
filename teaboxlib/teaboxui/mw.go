@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
@@ -80,46 +81,55 @@ func (tbp *TeaboxWorkspacePanels) Draw(screen tcell.Screen) {
 	}
 }
 
+var _teaboxMainWindowRef *TeaboxMainWindow
+
+func InitTeaboxMainWindow() *TeaboxMainWindow {
+	if _teaboxMainWindowRef == nil {
+		_teaboxMainWindowRef = NewTeaboxMainWindow()
+	}
+	return _teaboxMainWindowRef
+}
+
+func GetTeaboxMainWindow() *TeaboxMainWindow {
+	return _teaboxMainWindowRef
+}
+
 type TeaboxMainWindow struct {
-	appRef *crtview.Application
-	title  string
+	title string
 
 	// Windows
 	menu *TeaboxMenu
 
 	p          *TeaboxWorkspacePanels
-	conf       *teaboxlib.TeaConf
 	formWindow *TeaboxArgsForm
 }
 
-func NewTeaboxMainWindow(app *crtview.Application, conf *teaboxlib.TeaConf) *TeaboxMainWindow {
+func NewTeaboxMainWindow() *TeaboxMainWindow {
 	tmw := new(TeaboxMainWindow)
-	tmw.appRef = app
-	tmw.appRef.EnableMouse(true)
-	tmw.appRef.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	teabox.GetTeaboxApp().EnableMouse(true)
+	teabox.GetTeaboxApp().SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
-			tmw.appRef.SetFocus(tmw.formWindow.GetWidget())
+			teabox.GetTeaboxApp().SetFocus(tmw.formWindow.GetWidget())
 		case tcell.KeyBacktab:
-			tmw.appRef.SetFocus(tmw.menu.items)
+			teabox.GetTeaboxApp().SetFocus(tmw.menu.items)
 		default:
 			//fmt.Println(event.Key())
 		}
 		return event
 	})
-	tmw.SetConfig(conf)
-	tmw.title = tmw.conf.GetTitle()
+	tmw.title = teabox.GetTeaboxApp().GetGlobalConfig().GetTitle()
 
 	// Whole workspace
 	tmw.p = NewTeaboxWorkspacePanels(tmw.title)
 
-	tmw.menu = NewTeaboxMenu(tmw.appRef, tmw.conf)
+	tmw.menu = NewTeaboxMenu()
 	tmw.menu.SetOnSelectedFunc(func(i int, li *crtview.ListItem) {
 		tmw.formWindow.ShowForm(strings.TrimSpace(li.GetMainText()))
 	})
 	tmw.p.GetContainer().AddItem(tmw.menu.GetWidget(), teaboxlib.MAIN_MENU_WIDTH, 1, true)
 
-	tmw.formWindow = NewTeaboxArgsForm(tmw.conf)
+	tmw.formWindow = NewTeaboxArgsForm()
 	tmw.formWindow.Init()
 
 	tmw.p.GetContainer().AddItem(tmw.formWindow.GetWidget(), 0, 1, false)
@@ -127,21 +137,11 @@ func NewTeaboxMainWindow(app *crtview.Application, conf *teaboxlib.TeaConf) *Tea
 	return tmw
 }
 
-// SetConfig of the teabox content
-func (tmw *TeaboxMainWindow) SetConfig(conf *teaboxlib.TeaConf) *TeaboxMainWindow {
-	tmw.conf = conf
-	return tmw
-}
-
 func (tmw *TeaboxMainWindow) GetContent() crtview.Primitive {
 	return tmw.p
 }
 
-/*
-.SetBackgroundColor(tcell.ColorBlue)
-		box.SetBorderColor(tcell.ColorWhite)
-		box.SetBorder(true).SetTitle("Hello, world!")
-		box.SetText("Output:\n").SetChangedFunc(func() { app.Draw() })
-		app.SetRoot(box, true)
-
-*/
+// GetMainMenu returns the main menu instance.
+func (tmw *TeaboxMainWindow) GetMainMenu() *TeaboxMenu {
+	return tmw.menu
+}
