@@ -63,7 +63,7 @@ func (tsw *TeaSTDOUTWindow) GetWindow() *crtview.TextView {
 	return tsw.w
 }
 
-func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath, cmdargs string) error {
+func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath string, cmdargs ...string) error {
 	if callback != "" {
 		// Setup local action for the future instance
 		teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {
@@ -84,7 +84,7 @@ func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath, cmdargs string) error {
 		}
 	}
 
-	cmd := exec.Command(cmdpath, cmdargs)
+	cmd := exec.Command(cmdpath, cmdargs...)
 	cmd.Stdout = tsw.GetWindow()
 	cmd.Stderr = tsw.GetWindow()
 

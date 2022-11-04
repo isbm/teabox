@@ -91,12 +91,32 @@ type TeaboxArgsForm struct {
 	TeaboxBaseWindow
 	layers *crtview.Panels
 
+	/*
+		This is not super-nice, but still, per each form (via GetId() method) it holds the following:
+
+		  1. A map of all named arguments with their values, e.g. "--path=/dev/null" etc.
+		  2. An array of named arguments without their values in order to put an order to the map above.
+		  3. An array of flags, like "-d -v -x -y -z" etc. Currently flags are always passed first.
+
+		Note, these are all arguments to the *module*, so if Teabox is not flexible enough to call a random
+		userland command, one can always wrap it with a shell script. :-)
+
+		NOTE: If you still think this is dumb, feel free to make it better and send your PR!
+	*/
+	argset   map[string]map[string]string // map of forms by id, each has a map of strings for named arguments.
+	argindex map[string][]string          // map of forms by id, each has an array of named arguments for their ordering.
+	flagset  map[string][]string          // map of forms by id, each has an array of flags. Flags are passed first.
+
 	modCmdIndex map[string]*teaboxlib.TeaConfModCommand
 }
 
 func NewTeaboxArgsForm() *TeaboxArgsForm {
 	taf := new(TeaboxArgsForm)
 	taf.modCmdIndex = map[string]*teaboxlib.TeaConfModCommand{}
+
+	taf.argset = map[string]map[string]string{}
+	taf.argindex = map[string][]string{}
+	taf.flagset = map[string][]string{}
 
 	return taf
 }
@@ -125,6 +145,114 @@ func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	}
 
 	return taf
+}
+
+// AddFlag adds a flag to the CLI command per a form.
+func (taf *TeaboxArgsForm) AddFlag(formid, flag string) *TeaboxArgsForm {
+	if flag == "" {
+		return taf
+	}
+
+	if _, ok := taf.flagset[formid]; !ok {
+		taf.flagset[formid] = []string{}
+	}
+
+	for _, f := range taf.flagset[formid] {
+		if f == flag { // already set
+			return taf
+		}
+	}
+
+	// Add a flag
+	taf.flagset[formid] = append(taf.flagset[formid], flag)
+
+	return taf
+}
+
+// RemoveFlag removes a flag from the CLI command per a form.
+func (taf *TeaboxArgsForm) RemoveFlag(formid, flag string) *TeaboxArgsForm {
+	if _, ok := taf.flagset[formid]; !ok {
+		taf.flagset[formid] = []string{}
+		return taf // nothing to remove
+	}
+
+	nf := []string{}
+	for _, f := range taf.flagset[formid] {
+		if flag != f {
+			nf = append(nf, f)
+		}
+	}
+
+	taf.flagset[formid] = nf
+
+	return taf
+}
+
+// AddArgument adds an argument to the CLI command per a form. Repeating this function call
+// will override the previous value (update).
+func (taf *TeaboxArgsForm) AddArgument(formid, argname, argvalue string) *TeaboxArgsForm {
+	if _, ok := taf.argindex[formid]; !ok {
+		taf.argindex[formid] = []string{}
+		taf.argset[formid] = map[string]string{}
+	}
+
+	isNew := true
+	for _, x := range taf.argindex[formid] {
+		if x == argname {
+			isNew = false
+			break
+		}
+	}
+
+	if isNew {
+		taf.argindex[formid] = append(taf.argindex[formid], argname)
+	}
+
+	taf.argset[formid][argname] = argvalue
+
+	return taf
+}
+
+// RemoveArgument sets an argument to the CLI command per a form
+func (taf *TeaboxArgsForm) RemoveArgument(formid, argname string) *TeaboxArgsForm {
+	if _, ok := taf.argindex[formid]; !ok {
+		taf.argindex[formid] = []string{}
+		taf.argset[formid] = map[string]string{}
+		return taf // nothing to remove
+	}
+	keys := []string{}
+	for _, key := range taf.argindex[formid] {
+		if key != argname {
+			keys = append(keys, key)
+		}
+	}
+	taf.argindex[formid] = keys
+	delete(taf.argset[formid], argname)
+
+	return taf
+}
+
+// GetCommandArguments returns an array of strings in a form of a formed command line, like so:
+//
+//	[]string{"-x", "-y", "-z", "--path=/dev/null"}
+//
+// All the data is ordered as it is described in the module configuration.
+func (taf *TeaboxArgsForm) GetCommandArguments(formid string) []string {
+	cargs := []string{}
+
+	// Get flags for this form, if any
+	if fset, ok := taf.flagset[formid]; ok {
+		cargs = append(cargs, fset...)
+	}
+
+	// Get ordered arguments, if any
+	if aidx, ok := taf.argindex[formid]; ok { // this assumes argindex always contains all keys in the
+		for _, arg := range aidx {
+			cargs = append(cargs, fmt.Sprintf("%s=%s", arg, taf.argset[formid][arg]))
+		}
+	}
+
+	return cargs
 }
 
 // ShowIntroScreen hides current form and shows the statrup one
@@ -165,13 +293,17 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 						opts = append(opts, v)
 					}
 				}
+				if len(opts) == 0 {
+					teabox.GetTeaboxApp().Stop()
+					fmt.Printf("List \"%s\" in command \"%s\" of module \"%s\" has no values.", a.GetWidgetLabel(), cmd.GetTitle(), mod.GetTitle())
+				}
 				f.AddDropDownSimple(a.GetWidgetLabel(), 0, nil, opts...)
 			case "text":
 				// Text should have at least one argument, and one optional:
 				// <NAME>            to what option to bind its value, e.g. "--name"
 				// [DEFAULT_TEXT]    A default text, but can be omitted, e.g. "John Smith"
 				if len(a.GetOptions()) > 0 {
-					f.AddInputField(a.GetWidgetLabel(), a.GetOptions()[0].GetLabel(), 80, nil, nil) // GetLabel() contains default text, at least for now
+					f.AddInputField(a.GetWidgetLabel(), a.GetOptions()[0].GetValueAsString(), 80, nil, nil) // GetLabel() contains default text, at least for now
 				}
 			case "toggle":
 				f.AddCheckBox(a.GetWidgetLabel(), "", false, nil)
