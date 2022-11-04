@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
@@ -108,6 +109,8 @@ type TeaboxArgsForm struct {
 	flagset  map[string][]string          // map of forms by id, each has an array of flags. Flags are passed first.
 
 	modCmdIndex map[string]*teaboxlib.TeaConfModCommand
+
+	wzlib_logger.WzLogger
 }
 
 func NewTeaboxArgsForm() *TeaboxArgsForm {
@@ -260,6 +263,13 @@ func (taf *TeaboxArgsForm) ShowIntroScreen() {
 	taf.layers.SetCurrentPanel("_intro-screen")
 }
 
+func (taf *TeaboxArgsForm) onError(err error) {
+	if err != nil {
+		teabox.GetTeaboxApp().Stop()
+		taf.GetLogger().Error(err.Error())
+	}
+}
+
 func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	if c.IsGroupContainer() {
 		for _, x := range c.GetChildren() {
@@ -287,26 +297,11 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 		for _, a := range cmd.GetArguments() {
 			switch a.GetWidgetType() {
 			case "dropdown", "list":
-				opts := []string{}
-				for _, opt := range a.GetOptions() {
-					if v, _ := opt.GetValue().(string); v != "" {
-						opts = append(opts, v)
-					}
-				}
-				if len(opts) == 0 {
-					teabox.GetTeaboxApp().Stop()
-					fmt.Printf("List \"%s\" in command \"%s\" of module \"%s\" has no values.", a.GetWidgetLabel(), cmd.GetTitle(), mod.GetTitle())
-				}
-				f.AddDropDownSimple(a.GetWidgetLabel(), 0, nil, opts...)
+				taf.onError(taf.addDropdownListWidget(mod.GetTitle(), cmd.GetTitle(), f, a))
 			case "text":
-				// Text should have at least one argument, and one optional:
-				// <NAME>            to what option to bind its value, e.g. "--name"
-				// [DEFAULT_TEXT]    A default text, but can be omitted, e.g. "John Smith"
-				if len(a.GetOptions()) > 0 {
-					f.AddInputField(a.GetWidgetLabel(), a.GetOptions()[0].GetValueAsString(), 80, nil, nil) // GetLabel() contains default text, at least for now
-				}
+				taf.onError(taf.addTextWidget(mod.GetTitle(), cmd.GetTitle(), f, a))
 			case "toggle":
-				f.AddCheckBox(a.GetWidgetLabel(), "", false, nil)
+				taf.onError(taf.addToggleWidget(mod.GetTitle(), cmd.GetTitle(), f, a))
 			case "silent":
 			}
 		}
@@ -332,4 +327,40 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	}
 
 	taf.layers.AddPanel(mod.GetTitle(), formPanel, true, false)
+}
+
+func (taf *TeaboxArgsForm) addDropdownListWidget(modName, cmdName string, tf *TeaForm, arg *teaboxlib.TeaConfModArg) error {
+	opts := []string{}
+	for _, opt := range arg.GetOptions() {
+		if v, _ := opt.GetValue().(string); v != "" {
+			opts = append(opts, v)
+		}
+	}
+	if len(opts) == 0 {
+		return fmt.Errorf("List \"%s\" in command \"%s\" of module \"%s\" has no values.", arg.GetWidgetLabel(), cmdName, modName)
+	}
+
+	tf.AddDropDownSimple(arg.GetWidgetLabel(), 0, nil, opts...)
+	return nil
+}
+
+/*
+Text could have only one argument as a default text:
+
+	[DEFAULT_TEXT]
+
+The field can be also completely empty.
+*/
+func (taf *TeaboxArgsForm) addTextWidget(modName, cmdName string, tf *TeaForm, arg *teaboxlib.TeaConfModArg) error {
+	if len(arg.GetOptions()) > 0 {
+		tf.AddInputField(arg.GetWidgetLabel(), arg.GetOptions()[0].GetValueAsString(), 0, nil, nil)
+	}
+
+	return nil
+}
+
+func (taf *TeaboxArgsForm) addToggleWidget(modName, cmdName string, tf *TeaForm, arg *teaboxlib.TeaConfModArg) error {
+	tf.AddCheckBox(arg.GetWidgetLabel(), "", false, nil)
+
+	return nil
 }
