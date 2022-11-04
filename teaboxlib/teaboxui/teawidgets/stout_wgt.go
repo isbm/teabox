@@ -7,6 +7,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox"
+	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
 /*
@@ -15,8 +16,9 @@ It is used to show the output of a called script.
 */
 
 type TeaSTDOUTWindow struct {
-	sb *crtview.TextView
-	w  *crtview.TextView
+	statusBar *crtview.TextView
+	titleBar  *crtview.TextView
+	w         *crtview.TextView
 	*crtview.Flex
 }
 
@@ -28,12 +30,12 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.SetDirection(crtview.FlexRow)
 
 	// Add top label
-	label := crtview.NewTextView()
-	label.SetBackgroundColor(tcell.ColorDarkGrey)
-	label.SetTextColor(tcell.ColorLightGray)
-	label.SetText("STDOUT output:")
+	c.titleBar = crtview.NewTextView()
+	c.titleBar.SetBackgroundColor(tcell.NewRGBColor(0x88, 0x88, 0x88))
+	c.titleBar.SetTextColor(tcell.ColorBlack)
+	c.titleBar.SetText("STDOUT output:")
 
-	c.AddItem(label, 1, 0, false)
+	c.AddItem(c.titleBar, 1, 0, false)
 
 	// Create STDOUT logger
 	c.w = crtview.NewTextView()
@@ -48,11 +50,11 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.AddItem(c.w, 0, 1, true)
 
 	// Add bottom status
-	c.sb = crtview.NewTextView()
-	c.sb.SetBackgroundColor(tcell.ColorDarkGrey)
-	c.sb.SetTextColor(tcell.ColorLightGray)
-	c.sb.SetText("some status here")
-	c.AddItem(c.sb, 1, 0, false)
+	c.statusBar = crtview.NewTextView()
+	c.statusBar.SetBackgroundColor(tcell.ColorDarkGrey)
+	c.statusBar.SetTextColor(tcell.ColorBlack)
+	c.statusBar.SetText("some status here")
+	c.AddItem(c.statusBar, 1, 0, false)
 
 	return c
 }
@@ -63,6 +65,19 @@ func (tsw *TeaSTDOUTWindow) GetWindow() *crtview.TextView {
 
 func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath, cmdargs string) error {
 	if callback != "" {
+		// Setup local action for the future instance
+		teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {
+			switch call.GetClass() {
+			case "LOGGER-STATUS":
+				tsw.statusBar.SetText(call.GetString())
+				teabox.GetTeaboxApp().Draw()
+			case "LOGGER-TITLE":
+				tsw.titleBar.SetText(call.GetString())
+				teabox.GetTeaboxApp().Draw()
+			}
+		})
+
+		// Run the Unix server instance
 		if err := teabox.GetTeaboxApp().GetCallbackServer().Start(callback); err != nil {
 			teabox.GetTeaboxApp().Stop()
 			fmt.Println(err) // That would be a general system problem
@@ -72,6 +87,7 @@ func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath, cmdargs string) error {
 	cmd := exec.Command(cmdpath, cmdargs)
 	cmd.Stdout = tsw.GetWindow()
 	cmd.Stderr = tsw.GetWindow()
+
 	if err := cmd.Run(); err != nil {
 		teabox.GetTeaboxApp().Stop()
 		fmt.Println("Error:", err)
