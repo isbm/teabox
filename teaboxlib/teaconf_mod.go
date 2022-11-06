@@ -281,6 +281,7 @@ func (tmc *TeaConfModCommand) GetStaticFlags() []string {
 // and provide results for futher processing within a chain.
 type TeaConfModule struct {
 	socketPath string
+	landing    string
 	conditions []map[string]string
 	commands   []*TeaConfModCommand
 
@@ -301,6 +302,24 @@ func (tcf *TeaConfModule) SetCallbackPath(pt interface{}) *TeaConfModule {
 		tcf.socketPath = v
 	}
 	return tcf
+}
+
+// SetLandingPageType is one of "logger", "progress", "list" etc.
+func (tcf *TeaConfModule) SetLandingPageType(lp string) *TeaConfModule {
+	switch lp {
+	case "logger", "progress", "list":
+		tcf.landing = lp
+	case "":
+		tcf.landing = "logger"
+	default:
+		fmt.Printf("Error: unknown landing page ID in module \"%s\"\n", tcf.GetTitle())
+		os.Exit(1)
+	}
+	return tcf
+}
+
+func (tcf *TeaConfModule) GetLandingPageType() string {
+	return tcf.landing
 }
 
 // GetCallbackPath returns a physical path on the disk for the Unix socket to communicate between the processes.

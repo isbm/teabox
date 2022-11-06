@@ -26,7 +26,7 @@ func NewTeaForm() *TeaForm {
 }
 
 func (tf *TeaForm) SetId(id string) {
-	tf.cmdId = strings.ToLower(strings.ReplaceAll(id, " ", "-"))
+	tf.cmdId = id
 }
 
 func (tf *TeaForm) GetId() string {
@@ -35,34 +35,55 @@ func (tf *TeaForm) GetId() string {
 
 // TeaFormsPanel is a layer of windows, and it contains many TeaForm instances to switch between them.
 type TeaFormsPanel struct {
-	wout *teawidgets.TeaSTDOUTWindow
+	landingPage  teawidgets.TeaboxLandingWindow
+	moduleConfig *teaboxlib.TeaConfModule
+	objref       map[string]interface{}
 	*crtview.Panels
 }
 
-func NewTeaFormsPanel() *TeaFormsPanel {
+func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule) *TeaFormsPanel {
 	tfp := &TeaFormsPanel{
-		Panels: crtview.NewPanels(),
+		Panels:       crtview.NewPanels(),
+		objref:       map[string]interface{}{},
+		moduleConfig: conf,
 	}
 
-	tfp.wout = teawidgets.NewTeaSTDOUTWindow()
-	tfp.AddPanel("_stdout", tfp.wout, true, false)
+	// Init landing
+	switch tfp.moduleConfig.GetLandingPageType() {
+	case "logger":
+		tfp.landingPage = teawidgets.NewTeaSTDOUTWindow()
+		tfp.AddPanel(teawidgets.LANDING_W_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
+	default:
+		teabox.GetTeaboxApp().Stop()
+		fmt.Printf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType())
+	}
 
 	return tfp
 }
 
-func (tfp *TeaFormsPanel) ShowStdoutWindow() {
-	tfp.SetCurrentPanel("_stdout")
+func (tfp *TeaFormsPanel) GetLandingPage() teawidgets.TeaboxLandingWindow {
+	return tfp.landingPage
 }
 
-func (tfp *TeaFormsPanel) GetStdoutWindow() *teawidgets.TeaSTDOUTWindow {
-	return tfp.wout
+func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize bool, visible bool) {
+	tfp.objref[name] = item
+	tfp.Panels.AddPanel(name, item, resize, visible)
+}
+
+func (tfp *TeaFormsPanel) ShowLandingWindow() {
+	tfp.SetCurrentPanel(teawidgets.LANDING_W_LOGGER)
+}
+
+func (tfp *TeaFormsPanel) GetFormItem(title, subtitle string) interface{} {
+	return tfp.objref[fmt.Sprintf("%s - %s", title, subtitle)]
 }
 
 func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *TeaForm {
 	f := NewTeaForm()
 
+	// XXX: ID (Set/Get by ID) needs to be re-thought
 	f.SetTitle(fmt.Sprintf("%s - %s", title, subtitle))
-	f.SetId(title)
+	f.SetId(fmt.Sprintf("%s - %s", title, subtitle))
 
 	f.SetBorder(true)
 
@@ -81,16 +102,22 @@ func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *TeaForm {
 	// Buttons align
 	f.SetButtonsAlign(crtview.AlignRight)
 	f.SetButtonsToBottom()
+	fmt.Println(f.GetId())
 
 	tfp.AddPanel(f.GetId(), f, true, tfp.GetPanelCount() == 1)
 
-	return f
+	return tfp.GetFormItem(title, subtitle).(*TeaForm)
 }
 
 // TeaboxArgsForm contains a layers with TeaForms on it, also their output, intro screen, callback screens etc.
 type TeaboxArgsForm struct {
 	TeaboxBaseWindow
-	layers *crtview.Panels
+
+	/*
+		Multi-pages forms for all modules of the suite.
+		Menu switches between the modules, displaying a default first form, when selected.
+	*/
+	allModulesForms *crtview.Panels
 
 	/*
 		This is not super-nice, but still, per each form (via GetId() method) it holds the following:
@@ -125,15 +152,15 @@ func NewTeaboxArgsForm() *TeaboxArgsForm {
 }
 
 func (taf *TeaboxArgsForm) GetWidget() crtview.Primitive {
-	return taf.layers
+	return taf.allModulesForms
 }
 
-func (taf *TeaboxArgsForm) ShowForm(id string) {
-	taf.layers.SetCurrentPanel(id)
+func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
+	taf.allModulesForms.SetCurrentPanel(id)
 }
 
 func (taf *TeaboxArgsForm) Init() TeaboxWindow {
-	taf.layers = crtview.NewPanels()
+	taf.allModulesForms = crtview.NewPanels()
 
 	intro := crtview.NewTextView()
 	intro.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
@@ -141,7 +168,7 @@ func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	intro.SetText("\n\n\n\nSelect option from the menu on the left")
 	intro.SetTextAlign(crtview.AlignCenter)
 
-	taf.layers.AddPanel("_intro-screen", intro, true, true)
+	taf.allModulesForms.AddPanel("_intro-screen", intro, true, true)
 
 	for _, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
 		taf.generateForms(mod)
@@ -266,7 +293,7 @@ func (taf *TeaboxArgsForm) GetCommandArguments(formid string) []string {
 
 // ShowIntroScreen hides current form and shows the statrup one
 func (taf *TeaboxArgsForm) ShowIntroScreen() {
-	taf.layers.SetCurrentPanel("_intro-screen")
+	taf.allModulesForms.SetCurrentPanel("_intro-screen")
 }
 
 func (taf *TeaboxArgsForm) onError(err error) {
@@ -288,7 +315,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	}
 
 	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
-	formPanel := NewTeaFormsPanel()
+	formPanel := NewTeaFormsPanel(mod)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
 		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle())
@@ -320,12 +347,18 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 
 		// Or next/previous, if not the last form
 		f.AddButton("Start", func() {
-			formPanel.ShowStdoutWindow()
+			// Show resulting end-widget. Those are:
+			// - STDOUT "dumb" writer, shows just an output, like a terminal
+			// - Checklist done/todo progress screen that has various features, such as progress-bar, status etc (TODO)
+			formPanel.ShowLandingWindow()
 			go func() {
-				if err := formPanel.wout.Action(mod.GetCallbackPath(), taf.modCmdIndex[f.GetId()].GetCommandPath(), taf.GetCommandArguments(f.GetId())...); err != nil {
+				// Run command on the landing window
+				if err := formPanel.GetLandingPage().Action(taf.modCmdIndex[f.GetId()].GetCommandPath(), taf.GetCommandArguments(f.GetId())...); err != nil {
 					teabox.GetTeaboxApp().Stop()
 					fmt.Println("Error:", err)
 				}
+
+				// Reset landing window to the caller form as done.
 				formPanel.SetCurrentPanel(f.GetId())
 			}()
 		})
@@ -338,7 +371,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 		break // currently we take only a first command
 	}
 
-	taf.layers.AddPanel(mod.GetTitle(), formPanel, true, false)
+	taf.allModulesForms.AddPanel(mod.GetTitle(), formPanel, true, false)
 }
 
 func (taf *TeaboxArgsForm) addDropdownListWidget(modName, cmdName string, tf *TeaForm, arg *teaboxlib.TeaConfModArg) error {

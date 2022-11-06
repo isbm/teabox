@@ -59,31 +59,49 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	return c
 }
 
+func (tsw *TeaSTDOUTWindow) AsWidgetPrimitive() crtview.Primitive {
+	var w TeaboxLandingWindow = tsw
+	return w.(crtview.Primitive)
+}
+
 func (tsw *TeaSTDOUTWindow) GetWindow() *crtview.TextView {
 	return tsw.w
 }
 
-func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath string, cmdargs ...string) error {
-	if callback != "" {
-		// Setup local action for the future instance
-		teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {
-			switch call.GetClass() {
-			case "LOGGER-STATUS":
-				tsw.statusBar.SetText(call.GetString())
-				teabox.GetTeaboxApp().Draw()
-			case "LOGGER-TITLE":
-				tsw.titleBar.SetText(call.GetString())
-				teabox.GetTeaboxApp().Draw()
-			}
-		})
-
-		// Run the Unix server instance
-		if err := teabox.GetTeaboxApp().GetCallbackServer().Start(callback); err != nil {
-			teabox.GetTeaboxApp().Stop()
-			fmt.Println(err) // That would be a general system problem
-		}
+func (tsw *TeaSTDOUTWindow) StartListener(callback string) error {
+	if callback == "" {
+		return fmt.Errorf("No callback path defined.")
 	}
 
+	// Setup local action for the future instance
+	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {
+		switch call.GetClass() {
+		case "LOGGER-STATUS":
+			tsw.statusBar.SetText(call.GetString())
+			teabox.GetTeaboxApp().Draw()
+		case "LOGGER-TITLE":
+			tsw.titleBar.SetText(call.GetString())
+			teabox.GetTeaboxApp().Draw()
+		}
+	})
+
+	// Run the Unix server instance
+	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(callback); err != nil {
+		teabox.GetTeaboxApp().Stop()
+		fmt.Println(err) // That would be a general system problem
+	}
+	return nil
+}
+
+func (tsw *TeaSTDOUTWindow) StopListener() error {
+	// Stop Unix socket
+	if teabox.GetTeaboxApp().GetCallbackServer().IsRunning() {
+		return teabox.GetTeaboxApp().GetCallbackServer().Stop()
+	}
+	return nil
+}
+
+func (tsw *TeaSTDOUTWindow) Action(cmdpath string, cmdargs ...string) error {
 	cmd := exec.Command(cmdpath, cmdargs...)
 	cmd.Stdout = tsw.GetWindow()
 	cmd.Stderr = tsw.GetWindow()
@@ -91,11 +109,6 @@ func (tsw *TeaSTDOUTWindow) Action(callback, cmdpath string, cmdargs ...string) 
 	if err := cmd.Run(); err != nil {
 		teabox.GetTeaboxApp().Stop()
 		fmt.Println("Error:", err)
-	}
-
-	// Stop Unix socket
-	if teabox.GetTeaboxApp().GetCallbackServer().IsRunning() {
-		return teabox.GetTeaboxApp().GetCallbackServer().Stop()
 	}
 
 	return nil
