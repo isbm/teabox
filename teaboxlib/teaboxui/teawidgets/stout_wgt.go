@@ -16,6 +16,7 @@ It is used to show the output of a called script.
 */
 
 type TeaSTDOUTWindow struct {
+	action    func(call *teaboxlib.TeaboxAPICall)
 	statusBar *crtview.TextView
 	titleBar  *crtview.TextView
 	w         *crtview.TextView
@@ -56,6 +57,18 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.statusBar.SetText("some status here")
 	c.AddItem(c.statusBar, 1, 0, false)
 
+	// Action definition
+	c.action = func(call *teaboxlib.TeaboxAPICall) {
+		switch call.GetClass() {
+		case "LOGGER-STATUS":
+			c.statusBar.SetText(call.GetString())
+			teabox.GetTeaboxApp().Draw()
+		case "LOGGER-TITLE":
+			c.titleBar.SetText(call.GetString())
+			teabox.GetTeaboxApp().Draw()
+		}
+	}
+
 	return c
 }
 
@@ -68,29 +81,8 @@ func (tsw *TeaSTDOUTWindow) GetWindow() *crtview.TextView {
 	return tsw.w
 }
 
-func (tsw *TeaSTDOUTWindow) StartListener(callback string) error {
-	if callback == "" {
-		return fmt.Errorf("No callback path defined.")
-	}
-
-	// Setup local action for the future instance
-	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {
-		switch call.GetClass() {
-		case "LOGGER-STATUS":
-			tsw.statusBar.SetText(call.GetString())
-			teabox.GetTeaboxApp().Draw()
-		case "LOGGER-TITLE":
-			tsw.titleBar.SetText(call.GetString())
-			teabox.GetTeaboxApp().Draw()
-		}
-	})
-
-	// Run the Unix server instance
-	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(callback); err != nil {
-		teabox.GetTeaboxApp().Stop()
-		fmt.Println(err) // That would be a general system problem
-	}
-	return nil
+func (tsw *TeaSTDOUTWindow) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) {
+	return tsw.action
 }
 
 func (tsw *TeaSTDOUTWindow) StopListener() error {

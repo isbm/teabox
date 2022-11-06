@@ -70,11 +70,27 @@ func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize b
 	tfp.Panels.AddPanel(name, item, resize, visible)
 }
 
+func (tfp *TeaFormsPanel) StartListener() error {
+	// TODO: Add widget update handler action. Currently a noop dummy
+	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {
+		switch call.GetClass() {
+		case "W":
+		}
+	})
+
+	// Run the Unix server instance
+	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(tfp.moduleConfig.GetCallbackPath()); err != nil {
+		teabox.GetTeaboxApp().Stop()
+		fmt.Println(err) // That would be a general system problem
+	}
+
+	return nil
+}
+
 // ShowLandingWindow and start Unix socket server listener with the current callback pack
 func (tfp *TeaFormsPanel) ShowLandingWindow() error {
-	if err := tfp.landingPage.StartListener(tfp.moduleConfig.GetCallbackPath()); err != nil {
-		return err
-	}
+	// Setup local action for the future instance
+	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
 	tfp.SetCurrentPanel(teawidgets.LANDING_W_LOGGER)
 
 	return nil
@@ -114,7 +130,6 @@ func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *TeaForm {
 	// Buttons align
 	f.SetButtonsAlign(crtview.AlignRight)
 	f.SetButtonsToBottom()
-	fmt.Println(f.GetId())
 
 	tfp.AddPanel(f.GetId(), f, true, tfp.GetPanelCount() == 1)
 
@@ -129,7 +144,7 @@ type TeaboxArgsForm struct {
 		Multi-pages forms for all modules of the suite.
 		Menu switches between the modules, displaying a default first form, when selected.
 	*/
-	allModulesForms *crtview.Panels
+	allModulesForms *TeaboxArgsFormPanels
 
 	/*
 		This is not super-nice, but still, per each form (via GetId() method) it holds the following:
@@ -168,11 +183,20 @@ func (taf *TeaboxArgsForm) GetWidget() crtview.Primitive {
 }
 
 func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
-	taf.allModulesForms.SetCurrentPanel(id)
+	// TODO: Start module listener here!
+	// - Remove listener start from "start" button hook (on lander show)
+	// - Add fetcher lander page from here, somehow :)
+	f, ok := taf.allModulesForms.GetPanelByName(id).(*TeaFormsPanel)
+	if ok {
+		taf.allModulesForms.SetCurrentPanel(id)
+		f.StartListener()
+	} else {
+		panic(fmt.Sprintf("Panel %s was not found", id))
+	}
 }
 
 func (taf *TeaboxArgsForm) Init() TeaboxWindow {
-	taf.allModulesForms = crtview.NewPanels()
+	taf.allModulesForms = NewTeaboxArgsFormPanels()
 
 	intro := crtview.NewTextView()
 	intro.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
@@ -180,7 +204,7 @@ func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	intro.SetText("\n\n\n\nSelect option from the menu on the left")
 	intro.SetTextAlign(crtview.AlignCenter)
 
-	taf.allModulesForms.AddPanel("_intro-screen", intro, true, true)
+	taf.allModulesForms.AddPanel(teawidgets.INTRO_W, intro, true, true)
 
 	for _, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
 		taf.generateForms(mod)
@@ -305,7 +329,7 @@ func (taf *TeaboxArgsForm) GetCommandArguments(formid string) []string {
 
 // ShowIntroScreen hides current form and shows the statrup one
 func (taf *TeaboxArgsForm) ShowIntroScreen() {
-	taf.allModulesForms.SetCurrentPanel("_intro-screen")
+	taf.allModulesForms.SetCurrentPanel(teawidgets.INTRO_W)
 }
 
 func (taf *TeaboxArgsForm) onError(err error) {
@@ -327,6 +351,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	}
 
 	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
+	// TODO: Define action for updating widgets
 	formPanel := NewTeaFormsPanel(mod)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!

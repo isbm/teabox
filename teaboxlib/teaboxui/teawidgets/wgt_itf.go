@@ -1,11 +1,16 @@
 package teawidgets
 
-import "github.com/isbm/crtview"
+import (
+	"github.com/isbm/crtview"
+	"gitlab.com/isbm/teabox/teaboxlib"
+)
 
 const (
 	LANDING_W_LOGGER   = "_logger"
 	LANDING_W_PROGRESS = "_progress"
 	LANDING_W_LIST     = "_list"
+
+	INTRO_W = "_intro"
 )
 
 // TeaboxLandingWindow interface.
@@ -19,6 +24,8 @@ type TeaboxLandingWindow interface {
 	//   - "cmdpath" is a command absolute path (preferrably) or env returned
 	//   - "cmdargs" are the arguments to the "cmdpath"
 	Action(cmdpath string, cmdargs ...string) error
-	StartListener(callback string) error
 	StopListener() error
+
+	// Return window action on Unix socket calls, specific per this widget
+	GetWindowAction() func(call *teaboxlib.TeaboxAPICall)
 }
