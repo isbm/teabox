@@ -70,8 +70,20 @@ func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize b
 	tfp.Panels.AddPanel(name, item, resize, visible)
 }
 
-func (tfp *TeaFormsPanel) ShowLandingWindow() {
+// ShowLandingWindow and start Unix socket server listener with the current callback pack
+func (tfp *TeaFormsPanel) ShowLandingWindow() error {
+	if err := tfp.landingPage.StartListener(tfp.moduleConfig.GetCallbackPath()); err != nil {
+		return err
+	}
 	tfp.SetCurrentPanel(teawidgets.LANDING_W_LOGGER)
+
+	return nil
+}
+
+// StopLandingWindow switches back to the caller form and stops the Unix socket listener
+func (tfp *TeaFormsPanel) StopLandingWindow(fid string) error {
+	tfp.SetCurrentPanel(fid)
+	return tfp.landingPage.StopListener()
 }
 
 func (tfp *TeaFormsPanel) GetFormItem(title, subtitle string) interface{} {
@@ -350,6 +362,8 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 			// Show resulting end-widget. Those are:
 			// - STDOUT "dumb" writer, shows just an output, like a terminal
 			// - Checklist done/todo progress screen that has various features, such as progress-bar, status etc (TODO)
+			//
+			// NOTE: landing window also starts the listener, to which Action() below connects via resulting command Action() calls.
 			formPanel.ShowLandingWindow()
 			go func() {
 				// Run command on the landing window
@@ -358,8 +372,8 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 					fmt.Println("Error:", err)
 				}
 
-				// Reset landing window to the caller form as done.
-				formPanel.SetCurrentPanel(f.GetId())
+				// Reset landing window to the caller form as done and stop the listener
+				formPanel.StopLandingWindow(f.GetId())
 			}()
 		})
 
