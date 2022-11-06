@@ -99,7 +99,8 @@ func (tc *TeaConf) initConfig() error {
 					m.SetCondition(c.Root().Raw()["conditions"]).
 						SetCommands(c.Root().Raw()["commands"]).
 						SetCallbackPath(c.Root().String("callback", "")).
-						SetLandingPageType(c.Root().String("langing", ""))
+						SetLandingPageType(c.Root().String("langing", "")).
+						SetSetupCommand(c.Root().String("setup", ""))
 				}
 
 				groupId := c.Root().String("group", "")

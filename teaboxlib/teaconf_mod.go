@@ -282,6 +282,7 @@ func (tmc *TeaConfModCommand) GetStaticFlags() []string {
 type TeaConfModule struct {
 	socketPath string
 	landing    string
+	setup      string
 	conditions []map[string]string
 	commands   []*TeaConfModCommand
 
@@ -302,6 +303,15 @@ func (tcf *TeaConfModule) SetCallbackPath(pt interface{}) *TeaConfModule {
 		tcf.socketPath = v
 	}
 	return tcf
+}
+
+func (tcf *TeaConfModule) SetSetupCommand(setup string) *TeaConfModule {
+	tcf.setup = setup
+	return tcf
+}
+
+func (tcf *TeaConfModule) GetSetupCommand() string {
+	return tcf.setup
 }
 
 // SetLandingPageType is one of "logger", "progress", "list" etc.
