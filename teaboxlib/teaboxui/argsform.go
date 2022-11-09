@@ -196,15 +196,32 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 		}
 
 		if f.GetModuleConfig().GetSetupCommand() != "" {
-			// TODO: Show preload form first
+			// Show preload form first
 			taf.allModulesForms.SetCurrentPanel(teawidgets.LOAD_WINDOW_COMMON)
-			teabox.GetTeaboxApp().Draw()
+			loader := taf.allModulesForms.GetPanelByName(teawidgets.LOAD_WINDOW_COMMON).(*teawidgets.TeaboxArgsLoadingWindow)
+			loader.SetAction(func() {
+				// TODO: Hook-up Unix receiver with the pre-loader
 
-			// TODO: Start preload script
+				// Load finished, so show the main form
+				taf.allModulesForms.SetCurrentPanel(id)
+				teabox.GetTeaboxApp().Draw()
+			})
+
+			// Loader command could have relative path or absolute.
+			// Current directory ("./") is not supported
+			var cmd string
+			if !strings.HasPrefix(f.GetModuleConfig().GetSetupCommand(), "/") {
+				cmd = path.Join(f.GetModuleConfig().GetModulePath(), f.GetModuleConfig().GetSetupCommand())
+			} else {
+				cmd = f.GetModuleConfig().GetSetupCommand()
+			}
+
+			// Call the loader to pre-populate everything
+			if err := loader.Load(cmd, f.GetModuleConfig().GetSetupCommandArgs()...); err != nil {
+				teabox.GetTeaboxApp().GetScreen().Clear()
+				taf.GetLogger().Panic(err)
+			}
 		}
-
-		// Show the main form
-		//taf.allModulesForms.SetCurrentPanel(id)
 	} else {
 		panic(fmt.Sprintf("Panel %s was not found", id))
 	}

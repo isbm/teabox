@@ -311,7 +311,11 @@ func (tcf *TeaConfModule) SetSetupCommand(setup string) *TeaConfModule {
 }
 
 func (tcf *TeaConfModule) GetSetupCommand() string {
-	return tcf.setup
+	return strings.Fields(tcf.setup)[0]
+}
+
+func (tcf *TeaConfModule) GetSetupCommandArgs() []string {
+	return strings.Fields(tcf.setup)[1:]
 }
 
 // SetLandingPageType is one of "logger", "progress", "list" etc.

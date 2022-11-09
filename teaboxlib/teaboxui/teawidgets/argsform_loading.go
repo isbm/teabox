@@ -1,7 +1,10 @@
 package teawidgets
 
 import (
+	"os/exec"
+
 	"github.com/gdamore/tcell/v2"
+	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
@@ -12,7 +15,10 @@ type TeaboxArgsLoadingWindow struct {
 	progressSteps  int
 	progressOffset int
 
+	action func()
+
 	*crtview.Flex
+	wzlib_logger.WzLogger
 }
 
 func NewTeaboxArgsLoadingWindow() *TeaboxArgsLoadingWindow {
@@ -89,4 +95,20 @@ func (ld *TeaboxArgsLoadingWindow) SetProgress(p int) {
 // SetStatus of the status bar
 func (ld *TeaboxArgsLoadingWindow) SetStatus(status string) {
 	ld.statusBar.SetText(status)
+}
+
+// SetAction
+func (ld *TeaboxArgsLoadingWindow) SetAction(action func()) {
+	ld.action = action
+}
+
+func (ld *TeaboxArgsLoadingWindow) Load(cmd string, args ...string) error {
+	go func() {
+		if err := exec.Command(cmd, args...).Run(); err != nil {
+			ld.GetLogger().Panic(err)
+		}
+
+		ld.action()
+	}()
+	return nil
 }
