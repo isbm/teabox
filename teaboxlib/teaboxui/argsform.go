@@ -5,33 +5,12 @@ import (
 	"path"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 	"gitlab.com/isbm/teabox/teaboxlib/teaboxui/teawidgets"
 )
-
-// TeaForm is just an enhancement to crtview.Form to set its unique ID to find it out later.
-type TeaForm struct {
-	cmdId string
-	*crtview.Form
-}
-
-func NewTeaForm() *TeaForm {
-	return &TeaForm{
-		Form: crtview.NewForm(),
-	}
-}
-
-func (tf *TeaForm) SetId(id string) {
-	tf.cmdId = id
-}
-
-func (tf *TeaForm) GetId() string {
-	return tf.cmdId
-}
 
 // TeaFormsPanel is a layer of windows, and it contains many TeaForm instances to switch between them.
 type TeaFormsPanel struct {
@@ -111,34 +90,11 @@ func (tfp *TeaFormsPanel) GetFormItem(title, subtitle string) interface{} {
 	return tfp.objref[fmt.Sprintf("%s - %s", title, subtitle)]
 }
 
-func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *TeaForm {
-	f := NewTeaForm()
-
-	// XXX: ID (Set/Get by ID) needs to be re-thought
-	f.SetTitle(fmt.Sprintf("%s - %s", title, subtitle))
-	f.SetId(fmt.Sprintf("%s - %s", title, subtitle))
-
-	f.SetBorder(true)
-
-	// Colors
-	f.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
-	f.SetFieldTextColor(tcell.ColorWhite)
-	f.SetFieldBackgroundColor(teaboxlib.WORKSPACE_HEADER)
-	f.SetFieldBackgroundColorFocused(tcell.ColorGreenYellow)
-	f.SetFieldTextColorFocused(teaboxlib.WORKSPACE_BACKGROUND)
-
-	f.SetButtonBackgroundColor(teaboxlib.FORM_BUTTON_BACKGROUND)
-	f.SetButtonBackgroundColorFocused(teaboxlib.FORM_BUTTON_BACKGROUND_SELECTED)
-	f.SetButtonTextColor(teaboxlib.FORM_BUTTON_TEXT)
-	f.SetButtonTextColorFocused(teaboxlib.FORM_BUTTON_TEXT_SELECTED)
-
-	// Buttons align
-	f.SetButtonsAlign(crtview.AlignRight)
-	f.SetButtonsToBottom()
-
+func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *teawidgets.TeaboxArgsMainWindow {
+	f := teawidgets.NewTeaboxArgsMainWindow(title, subtitle)
 	tfp.AddPanel(f.GetId(), f, true, tfp.GetPanelCount() == 1)
 
-	return tfp.GetFormItem(title, subtitle).(*TeaForm)
+	return tfp.GetFormItem(title, subtitle).(*teawidgets.TeaboxArgsMainWindow)
 }
 
 // TeaboxArgsForm contains a layers with TeaForms on it, also their output, intro screen, callback screens etc.
@@ -444,7 +400,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	taf.allModulesForms.AddPanel(mod.GetTitle(), formPanel, true, false)
 }
 
-func (taf *TeaboxArgsForm) addDropdownListWidget(modName, cmdName string, tf *TeaForm, arg *teaboxlib.TeaConfModArg) error {
+func (taf *TeaboxArgsForm) addDropdownListWidget(modName, cmdName string, tf *teawidgets.TeaboxArgsMainWindow, arg *teaboxlib.TeaConfModArg) error {
 	opts := []string{}
 	for _, opt := range arg.GetOptions() {
 		if v, _ := opt.GetValue().(string); v != "" {
@@ -468,7 +424,7 @@ Text could have only one argument as a default text:
 
 The field can be also completely empty.
 */
-func (taf *TeaboxArgsForm) addTextWidget(modName, cmdName string, tf *TeaForm, arg *teaboxlib.TeaConfModArg) error {
+func (taf *TeaboxArgsForm) addTextWidget(modName, cmdName string, tf *teawidgets.TeaboxArgsMainWindow, arg *teaboxlib.TeaConfModArg) error {
 	if len(arg.GetOptions()) > 0 {
 		val := arg.GetOptions()[0].GetValueAsString()
 		if val != "" {
@@ -484,7 +440,7 @@ func (taf *TeaboxArgsForm) addTextWidget(modName, cmdName string, tf *TeaForm, a
 	return nil
 }
 
-func (taf *TeaboxArgsForm) addToggleWidget(modName, cmdName string, tf *TeaForm, arg *teaboxlib.TeaConfModArg) error {
+func (taf *TeaboxArgsForm) addToggleWidget(modName, cmdName string, tf *teawidgets.TeaboxArgsMainWindow, arg *teaboxlib.TeaConfModArg) error {
 	if len(arg.GetOptions()) == 0 {
 		return fmt.Errorf("Toggle \"%s\" in command \"%s\" of module \"%s\" should have its default state with at least one option.", arg.GetWidgetLabel(), cmdName, modName)
 	}
