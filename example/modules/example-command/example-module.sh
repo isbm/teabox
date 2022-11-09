@@ -26,6 +26,7 @@ function set_title() {
 
 function load_form() {
     echo "Loading form"
+    sleep 0.3
 }
 
 
@@ -61,7 +62,6 @@ function run() {
 
     set_status "Finished!"
 }
-
 
 if [[ $# -eq 0 ]]; then
     run $@
