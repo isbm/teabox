@@ -52,13 +52,18 @@ func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule) *TeaFormsPanel {
 	switch tfp.moduleConfig.GetLandingPageType() {
 	case "logger":
 		tfp.landingPage = teawidgets.NewTeaSTDOUTWindow()
-		tfp.AddPanel(teawidgets.LANDING_W_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
+		tfp.AddPanel(teawidgets.LANDING_WINDOW_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
 	default:
 		teabox.GetTeaboxApp().Stop()
 		fmt.Printf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType())
 	}
 
 	return tfp
+}
+
+// GetModuleConfig returns module configuration, as was specified in its init.conf
+func (tfp *TeaFormsPanel) GetModuleConfig() *teaboxlib.TeaConfModule {
+	return tfp.moduleConfig
 }
 
 func (tfp *TeaFormsPanel) GetLandingPage() teawidgets.TeaboxLandingWindow {
@@ -91,7 +96,7 @@ func (tfp *TeaFormsPanel) StartListener() error {
 func (tfp *TeaFormsPanel) ShowLandingWindow() error {
 	// Setup local action for the future instance
 	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
-	tfp.SetCurrentPanel(teawidgets.LANDING_W_LOGGER)
+	tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
 
 	return nil
 }
@@ -183,13 +188,23 @@ func (taf *TeaboxArgsForm) GetWidget() crtview.Primitive {
 }
 
 func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
-	// TODO: Start module listener here!
-	// - Remove listener start from "start" button hook (on lander show)
-	// - Add fetcher lander page from here, somehow :)
 	f, ok := taf.allModulesForms.GetPanelByName(id).(*TeaFormsPanel)
 	if ok {
-		taf.allModulesForms.SetCurrentPanel(id)
-		f.StartListener()
+		if err := f.StartListener(); err != nil {
+			teabox.GetTeaboxApp().GetScreen().Clear()
+			taf.GetLogger().Panic(err)
+		}
+
+		if f.GetModuleConfig().GetSetupCommand() != "" {
+			// TODO: Show preload form first
+			taf.allModulesForms.SetCurrentPanel(teawidgets.LOAD_WINDOW_COMMON)
+			teabox.GetTeaboxApp().Draw()
+
+			// TODO: Start preload script
+		}
+
+		// Show the main form
+		//taf.allModulesForms.SetCurrentPanel(id)
 	} else {
 		panic(fmt.Sprintf("Panel %s was not found", id))
 	}
@@ -198,14 +213,13 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	taf.allModulesForms = NewTeaboxArgsFormPanels()
 
-	intro := crtview.NewTextView()
-	intro.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
-	intro.SetBorder(true)
-	intro.SetText("\n\n\n\nSelect option from the menu on the left")
-	intro.SetTextAlign(crtview.AlignCenter)
+	// Add intro window
+	taf.allModulesForms.AddPanel(teawidgets.INTRO_WINDOW_COMMON, teawidgets.NewTeaboxArgsIntroWindow(), true, true)
 
-	taf.allModulesForms.AddPanel(teawidgets.INTRO_W, intro, true, true)
+	// Add argloading window
+	taf.allModulesForms.AddPanel(teawidgets.LOAD_WINDOW_COMMON, teawidgets.NewTeaboxArgsLoadingWindow(), true, false)
 
+	// Build all the forms
 	for _, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
 		taf.generateForms(mod)
 	}
@@ -329,7 +343,7 @@ func (taf *TeaboxArgsForm) GetCommandArguments(formid string) []string {
 
 // ShowIntroScreen hides current form and shows the statrup one
 func (taf *TeaboxArgsForm) ShowIntroScreen() {
-	taf.allModulesForms.SetCurrentPanel(teawidgets.INTRO_W)
+	taf.allModulesForms.SetCurrentPanel(teawidgets.INTRO_WINDOW_COMMON)
 }
 
 func (taf *TeaboxArgsForm) onError(err error) {

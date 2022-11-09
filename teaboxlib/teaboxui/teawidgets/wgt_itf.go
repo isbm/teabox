@@ -6,11 +6,12 @@ import (
 )
 
 const (
-	LANDING_W_LOGGER   = "_logger"
-	LANDING_W_PROGRESS = "_progress"
-	LANDING_W_LIST     = "_list"
+	LANDING_WINDOW_LOGGER   = "_logger"
+	LANDING_WINDOW_PROGRESS = "_progress"
+	LANDING_WINDOW_LIST     = "_list"
 
-	INTRO_W = "_intro"
+	INTRO_WINDOW_COMMON = "_intro-common"
+	LOAD_WINDOW_COMMON  = "_load-module-common"
 )
 
 // TeaboxLandingWindow interface.
