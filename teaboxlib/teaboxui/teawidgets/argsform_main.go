@@ -10,6 +10,10 @@ import (
 
 type TeaboxArgsMainWindow struct {
 	cmdId, title, subtitle string
+	flags                  []string
+	argset                 map[string]string // map of strings for named arguments.
+	argindex               []string          // an array of named arguments for args ordering.
+
 	*crtview.Form
 }
 
@@ -18,6 +22,9 @@ func NewTeaboxArgsMainWindow(title, subtitle string) *TeaboxArgsMainWindow {
 		Form:     crtview.NewForm(),
 		title:    title,
 		subtitle: subtitle,
+		flags:    []string{},
+		argset:   map[string]string{},
+		argindex: []string{},
 	}).init()
 }
 
@@ -49,4 +56,103 @@ func (tmw *TeaboxArgsMainWindow) init() *TeaboxArgsMainWindow {
 
 func (tmw *TeaboxArgsMainWindow) GetId() string {
 	return tmw.cmdId
+}
+
+// AddFlag adds a flag to the CLI command per a form.
+func (tmw *TeaboxArgsMainWindow) AddFlag(formid, flag string) *TeaboxArgsMainWindow {
+	if flag == "" {
+		return tmw
+	}
+
+	for _, f := range tmw.flags {
+		if f == flag { // already set
+			return tmw
+		}
+	}
+
+	// Add a flag
+	tmw.flags = append(tmw.flags, flag)
+
+	return tmw
+}
+
+// RemoveFlag removes a flag from the CLI command per a form.
+func (tmw *TeaboxArgsMainWindow) RemoveFlag(formid, flag string) *TeaboxArgsMainWindow {
+	nf := []string{}
+	for _, f := range tmw.flags {
+		if flag != f {
+			nf = append(nf, f)
+		}
+	}
+
+	tmw.flags = nf
+
+	return tmw
+}
+
+func (tmw *TeaboxArgsMainWindow) SetStaticFlags(cmd *teaboxlib.TeaConfModCommand) *TeaboxArgsMainWindow {
+	tmw.flags = append(tmw.flags, cmd.GetStaticFlags()...)
+	return tmw
+}
+
+func (tmw *TeaboxArgsMainWindow) GetFlags() []string {
+	return tmw.flags
+}
+
+// AddArgument adds an argument to the CLI command per a form. Repeating this function call
+// will override the previous value (update).
+func (tmw *TeaboxArgsMainWindow) AddArgument(formid, argname, argvalue string) *TeaboxArgsMainWindow {
+	isNew := true
+	for _, x := range tmw.argindex {
+		if x == argname {
+			isNew = false
+			break
+		}
+	}
+
+	if isNew {
+		tmw.argindex = append(tmw.argindex, argname)
+	}
+
+	tmw.argset[argname] = argvalue
+
+	return tmw
+}
+
+// RemoveArgument sets an argument to the CLI command per a form
+func (tmw *TeaboxArgsMainWindow) RemoveArgument(formid, argname string) *TeaboxArgsMainWindow {
+	keys := []string{}
+	for _, key := range tmw.argindex {
+		if key != argname {
+			keys = append(keys, key)
+		}
+	}
+
+	tmw.argindex = keys
+	delete(tmw.argset, argname)
+
+	return tmw
+}
+
+// GetCommandArguments returns an array of strings in a form of a formed command line, like so:
+//
+//	[]string{"-x", "-y", "-z", "--path=/dev/null"}
+//
+// All the data is ordered as it is described in the module configuration.
+func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
+	// Get flags for this form, if any
+	cargs := append([]string{}, tmw.flags...) // copy
+
+	// Get ordered arguments, if any
+	for _, arg := range tmw.argindex {
+		val := tmw.argset[arg]
+		if val != "" {
+			val = fmt.Sprintf("%s=%s", arg, val)
+		} else {
+			val = arg
+		}
+		cargs = append(cargs, val)
+	}
+
+	return cargs
 }

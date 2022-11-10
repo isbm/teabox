@@ -119,10 +119,6 @@ type TeaboxArgsForm struct {
 
 		NOTE: If you still think this is dumb, feel free to make it better and send your PR!
 	*/
-	argset   map[string]map[string]string // map of forms by id, each has a map of strings for named arguments.
-	argindex map[string][]string          // map of forms by id, each has an array of named arguments for their ordering.
-	flagset  map[string][]string          // map of forms by id, each has an array of flags. Flags are passed first.
-
 	modCmdIndex map[string]*teaboxlib.TeaConfModCommand
 
 	wzlib_logger.WzLogger
@@ -131,10 +127,6 @@ type TeaboxArgsForm struct {
 func NewTeaboxArgsForm() *TeaboxArgsForm {
 	taf := new(TeaboxArgsForm)
 	taf.modCmdIndex = map[string]*teaboxlib.TeaConfModCommand{}
-
-	taf.argset = map[string]map[string]string{}
-	taf.argindex = map[string][]string{}
-	taf.flagset = map[string][]string{}
 
 	return taf
 }
@@ -200,120 +192,6 @@ func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	return taf
 }
 
-// AddFlag adds a flag to the CLI command per a form.
-func (taf *TeaboxArgsForm) AddFlag(formid, flag string) *TeaboxArgsForm {
-	if flag == "" {
-		return taf
-	}
-
-	if _, ok := taf.flagset[formid]; !ok {
-		taf.flagset[formid] = []string{}
-	}
-
-	for _, f := range taf.flagset[formid] {
-		if f == flag { // already set
-			return taf
-		}
-	}
-
-	// Add a flag
-	taf.flagset[formid] = append(taf.flagset[formid], flag)
-
-	return taf
-}
-
-// RemoveFlag removes a flag from the CLI command per a form.
-func (taf *TeaboxArgsForm) RemoveFlag(formid, flag string) *TeaboxArgsForm {
-	if _, ok := taf.flagset[formid]; !ok {
-		taf.flagset[formid] = []string{}
-		return taf // nothing to remove
-	}
-
-	nf := []string{}
-	for _, f := range taf.flagset[formid] {
-		if flag != f {
-			nf = append(nf, f)
-		}
-	}
-
-	taf.flagset[formid] = nf
-
-	return taf
-}
-
-// AddArgument adds an argument to the CLI command per a form. Repeating this function call
-// will override the previous value (update).
-func (taf *TeaboxArgsForm) AddArgument(formid, argname, argvalue string) *TeaboxArgsForm {
-	if _, ok := taf.argindex[formid]; !ok {
-		taf.argindex[formid] = []string{}
-		taf.argset[formid] = map[string]string{}
-	}
-
-	isNew := true
-	for _, x := range taf.argindex[formid] {
-		if x == argname {
-			isNew = false
-			break
-		}
-	}
-
-	if isNew {
-		taf.argindex[formid] = append(taf.argindex[formid], argname)
-	}
-
-	taf.argset[formid][argname] = argvalue
-
-	return taf
-}
-
-// RemoveArgument sets an argument to the CLI command per a form
-func (taf *TeaboxArgsForm) RemoveArgument(formid, argname string) *TeaboxArgsForm {
-	if _, ok := taf.argindex[formid]; !ok {
-		taf.argindex[formid] = []string{}
-		taf.argset[formid] = map[string]string{}
-		return taf // nothing to remove
-	}
-	keys := []string{}
-	for _, key := range taf.argindex[formid] {
-		if key != argname {
-			keys = append(keys, key)
-		}
-	}
-	taf.argindex[formid] = keys
-	delete(taf.argset[formid], argname)
-
-	return taf
-}
-
-// GetCommandArguments returns an array of strings in a form of a formed command line, like so:
-//
-//	[]string{"-x", "-y", "-z", "--path=/dev/null"}
-//
-// All the data is ordered as it is described in the module configuration.
-func (taf *TeaboxArgsForm) GetCommandArguments(formid string) []string {
-	cargs := []string{}
-
-	// Get flags for this form, if any
-	if fset, ok := taf.flagset[formid]; ok {
-		cargs = append(cargs, fset...)
-	}
-
-	// Get ordered arguments, if any
-	if aidx, ok := taf.argindex[formid]; ok { // this assumes argindex always contains all keys in the
-		for _, arg := range aidx {
-			val := taf.argset[formid][arg]
-			if val != "" {
-				val = fmt.Sprintf("%s=%s", arg, val)
-			} else {
-				val = arg
-			}
-			cargs = append(cargs, val)
-		}
-	}
-
-	return cargs
-}
-
 // ShowIntroScreen hides current form and shows the statrup one
 func (taf *TeaboxArgsForm) ShowIntroScreen() {
 	taf.allModulesForms.SetCurrentPanel(teawidgets.INTRO_WINDOW_COMMON)
@@ -342,19 +220,14 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	formPanel := NewTeaFormsPanel(mod)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
-		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle())
+		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle()).
+			SetStaticFlags(cmd)
 
 		// Update relative path to its absolute
 		if !strings.HasPrefix(cmd.GetCommandPath(), "/") {
 			cmd.SetCommandPath(path.Join(mod.GetModulePath(), cmd.GetCommandPath()))
 		}
-
 		taf.modCmdIndex[f.GetId()] = cmd
-
-		// Add static flags
-		for _, flag := range cmd.GetStaticFlags() {
-			taf.AddFlag(f.GetId(), flag)
-		}
 
 		// Add arguments
 		for _, a := range cmd.GetArguments() {
@@ -379,7 +252,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 			formPanel.ShowLandingWindow()
 			go func() {
 				// Run command on the landing window
-				if err := formPanel.GetLandingPage().Action(taf.modCmdIndex[f.GetId()].GetCommandPath(), taf.GetCommandArguments(f.GetId())...); err != nil {
+				if err := formPanel.GetLandingPage().Action(taf.modCmdIndex[f.GetId()].GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {
 					teabox.GetTeaboxApp().Stop()
 					fmt.Println("Error:", err)
 				}
@@ -412,7 +285,7 @@ func (taf *TeaboxArgsForm) addDropdownListWidget(modName, cmdName string, tf *te
 	}
 
 	tf.AddDropDownSimple(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
-		taf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
+		tf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
 	}, opts...)
 	return nil
 }
@@ -429,11 +302,11 @@ func (taf *TeaboxArgsForm) addTextWidget(modName, cmdName string, tf *teawidgets
 		val := arg.GetOptions()[0].GetValueAsString()
 		if val != "" {
 			// register the value, if any
-			taf.AddArgument(tf.GetId(), arg.GetArgName(), val)
+			tf.AddArgument(tf.GetId(), arg.GetArgName(), val)
 		}
 
 		tf.AddInputField(arg.GetWidgetLabel(), val, 0, nil, func(text string) {
-			taf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(text))
+			tf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(text))
 		})
 	}
 
@@ -448,14 +321,14 @@ func (taf *TeaboxArgsForm) addToggleWidget(modName, cmdName string, tf *teawidge
 	state, ok := arg.GetOptions()[0].GetValue().(bool) // This is not the *value* but checked/unchecked state
 	if ok && state {
 		// Register state
-		taf.AddArgument(tf.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
+		tf.AddArgument(tf.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
 	}
 
 	tf.AddCheckBox(arg.GetWidgetLabel(), "", state, func(checked bool) {
 		if checked {
-			taf.AddArgument(tf.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
+			tf.AddArgument(tf.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
 		} else {
-			taf.RemoveArgument(tf.GetId(), arg.GetArgName())
+			tf.RemoveArgument(tf.GetId(), arg.GetArgName())
 		}
 	})
 
