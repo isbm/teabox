@@ -114,6 +114,16 @@ func (ac *TeaboxAPICall) GetKey() string {
 	return ac.key
 }
 
+// GetKeyAsInt if parse-able. Otherwise it will return -1.
+func (ac *TeaboxAPICall) GetKeyAsInt() int {
+	v, err := strconv.Atoi(ac.GetKey())
+	if err == nil {
+		return v
+	}
+
+	return -1
+}
+
 // GetValue of the API payload call
 func (ac *TeaboxAPICall) GetValue() interface{} {
 	return ac.payload
