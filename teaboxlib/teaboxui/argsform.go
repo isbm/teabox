@@ -230,17 +230,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 		taf.modCmdIndex[f.GetId()] = cmd
 
 		// Add arguments
-		for _, a := range cmd.GetArguments() {
-			switch a.GetWidgetType() {
-			case "dropdown", "list":
-				taf.onError(taf.addDropdownListWidget(mod.GetTitle(), cmd.GetTitle(), f, a))
-			case "text":
-				taf.onError(taf.addTextWidget(mod.GetTitle(), cmd.GetTitle(), f, a))
-			case "toggle":
-				taf.onError(taf.addToggleWidget(mod.GetTitle(), cmd.GetTitle(), f, a))
-			case "silent":
-			}
-		}
+		f.AddArgWidgets(cmd)
 
 		// Or next/previous, if not the last form
 		f.AddButton("Start", func() {
@@ -271,66 +261,4 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	}
 
 	taf.allModulesForms.AddPanel(mod.GetTitle(), formPanel, true, false)
-}
-
-func (taf *TeaboxArgsForm) addDropdownListWidget(modName, cmdName string, tf *teawidgets.TeaboxArgsMainWindow, arg *teaboxlib.TeaConfModArg) error {
-	opts := []string{}
-	for _, opt := range arg.GetOptions() {
-		if v, _ := opt.GetValue().(string); v != "" {
-			opts = append(opts, v)
-		}
-	}
-	if len(opts) == 0 {
-		return fmt.Errorf("List \"%s\" in command \"%s\" of module \"%s\" has no values.", arg.GetWidgetLabel(), cmdName, modName)
-	}
-
-	tf.AddDropDownSimple(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
-		tf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
-	}, opts...)
-	return nil
-}
-
-/*
-Text could have only one argument as a default text:
-
-	[DEFAULT_TEXT]
-
-The field can be also completely empty.
-*/
-func (taf *TeaboxArgsForm) addTextWidget(modName, cmdName string, tf *teawidgets.TeaboxArgsMainWindow, arg *teaboxlib.TeaConfModArg) error {
-	if len(arg.GetOptions()) > 0 {
-		val := arg.GetOptions()[0].GetValueAsString()
-		if val != "" {
-			// register the value, if any
-			tf.AddArgument(tf.GetId(), arg.GetArgName(), val)
-		}
-
-		tf.AddInputField(arg.GetWidgetLabel(), val, 0, nil, func(text string) {
-			tf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(text))
-		})
-	}
-
-	return nil
-}
-
-func (taf *TeaboxArgsForm) addToggleWidget(modName, cmdName string, tf *teawidgets.TeaboxArgsMainWindow, arg *teaboxlib.TeaConfModArg) error {
-	if len(arg.GetOptions()) == 0 {
-		return fmt.Errorf("Toggle \"%s\" in command \"%s\" of module \"%s\" should have its default state with at least one option.", arg.GetWidgetLabel(), cmdName, modName)
-	}
-
-	state, ok := arg.GetOptions()[0].GetValue().(bool) // This is not the *value* but checked/unchecked state
-	if ok && state {
-		// Register state
-		tf.AddArgument(tf.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
-	}
-
-	tf.AddCheckBox(arg.GetWidgetLabel(), "", state, func(checked bool) {
-		if checked {
-			tf.AddArgument(tf.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
-		} else {
-			tf.RemoveArgument(tf.GetId(), arg.GetArgName())
-		}
-	})
-
-	return nil
 }

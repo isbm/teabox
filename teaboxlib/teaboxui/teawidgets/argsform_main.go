@@ -2,6 +2,7 @@ package teawidgets
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
@@ -155,4 +156,81 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 	}
 
 	return cargs
+}
+
+// AddArgWidgets adds actual widgets for each argument
+func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand) {
+	for _, a := range cmd.GetArguments() {
+		switch a.GetWidgetType() {
+		case "dropdown", "list":
+			tmw.AddDropDownSimple(a)
+		case "text":
+			tmw.AddInputField(a)
+		case "toggle":
+			tmw.AddCheckBox(a)
+		case "silent": // XXX: should be deprecated from the specs
+		}
+	}
+}
+
+func (tmw *TeaboxArgsMainWindow) AddDropDownSimple(arg *teaboxlib.TeaConfModArg) error {
+	opts := []string{}
+	for _, opt := range arg.GetOptions() {
+		if v, _ := opt.GetValue().(string); v != "" {
+			opts = append(opts, v)
+		}
+	}
+	if len(opts) == 0 {
+		return fmt.Errorf("List \"%s\" in command \"%s\" of module \"%s\" has no values.", arg.GetWidgetLabel(), tmw.subtitle, tmw.title)
+	}
+
+	tmw.Form.AddDropDownSimple(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
+		//taf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
+	}, opts...)
+	return nil
+}
+
+/*
+Text could have only one argument as a default text:
+
+	[DEFAULT_TEXT]
+
+The field can be also completely empty.
+*/
+func (tmw *TeaboxArgsMainWindow) AddInputField(arg *teaboxlib.TeaConfModArg) error {
+	if len(arg.GetOptions()) > 0 {
+		val := arg.GetOptions()[0].GetValueAsString()
+		if val != "" {
+			// register the value, if any
+			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), val)
+		}
+
+		tmw.Form.AddInputField(arg.GetWidgetLabel(), val, 0, nil, func(text string) {
+			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), strings.TrimSpace(text))
+		})
+	}
+
+	return nil
+}
+
+func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error {
+	if len(arg.GetOptions()) == 0 {
+		return fmt.Errorf("Toggle \"%s\" in command \"%s\" of module \"%s\" should have its default state with at least one option.", arg.GetWidgetLabel(), tmw.title, tmw.subtitle)
+	}
+
+	state, ok := arg.GetOptions()[0].GetValue().(bool) // This is not the *value* but checked/unchecked state
+	if ok && state {
+		// Register state
+		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
+	}
+
+	tmw.Form.AddCheckBox(arg.GetWidgetLabel(), "", state, func(checked bool) {
+		if checked {
+			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
+		} else {
+			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
+		}
+	})
+
+	return nil
 }
