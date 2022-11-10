@@ -49,6 +49,19 @@ func (tfp *TeaFormsPanel) GetLandingPage() teawidgets.TeaboxLandingWindow {
 	return tfp.landingPage
 }
 
+// GetFormsSocketListerActions returns all actions from all forms
+func (tfp *TeaFormsPanel) GetFormsSocketListenerActions() []func(*teaboxlib.TeaboxAPICall) {
+	actions := []func(*teaboxlib.TeaboxAPICall){}
+	for _, ref := range tfp.objref {
+		form, ok := ref.(*teawidgets.TeaboxArgsMainWindow)
+		if !ok {
+			continue
+		}
+		actions = append(actions, form.GetSocketAcceptAction())
+	}
+	return actions
+}
+
 func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize bool, visible bool) {
 	tfp.objref[name] = item
 	tfp.Panels.AddPanel(name, item, resize, visible)
@@ -132,9 +145,9 @@ func (taf *TeaboxArgsForm) GetWidget() crtview.Primitive {
 }
 
 func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
-	f, ok := taf.allModulesForms.GetPanelByName(id).(*TeaFormsPanel)
+	formsPanel, ok := taf.allModulesForms.GetPanelByName(id).(*TeaFormsPanel)
 	if ok {
-		if err := f.StartListener(); err != nil {
+		if err := formsPanel.StartListener(); err != nil {
 			teabox.GetTeaboxApp().GetScreen().Clear()
 			taf.GetLogger().Panic(err)
 		}
@@ -149,7 +162,7 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 			3. Remove all the actions after the cycle is finished.
 		*/
 
-		if f.GetModuleConfig().GetSetupCommand() != "" {
+		if formsPanel.GetModuleConfig().GetSetupCommand() != "" {
 			// Show preload form first
 			taf.allModulesForms.SetCurrentPanel(teawidgets.LOAD_WINDOW_COMMON)
 			loader := taf.allModulesForms.GetPanelByName(teawidgets.LOAD_WINDOW_COMMON).(*teawidgets.TeaboxArgsLoadingWindow)
@@ -161,20 +174,21 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 				teabox.GetTeaboxApp().Draw()
 			})
 
-			// Set receiver hook
+			// Set receiver hooks
 			teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(loader.GetSocketAcceptAction())
+			teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(formsPanel.GetFormsSocketListenerActions()...)
 
 			// Loader command could have relative path or absolute.
 			// Current directory ("./") is not supported
 			var cmd string
-			if !strings.HasPrefix(f.GetModuleConfig().GetSetupCommand(), "/") {
-				cmd = path.Join(f.GetModuleConfig().GetModulePath(), f.GetModuleConfig().GetSetupCommand())
+			if !strings.HasPrefix(formsPanel.GetModuleConfig().GetSetupCommand(), "/") {
+				cmd = path.Join(formsPanel.GetModuleConfig().GetModulePath(), formsPanel.GetModuleConfig().GetSetupCommand())
 			} else {
-				cmd = f.GetModuleConfig().GetSetupCommand()
+				cmd = formsPanel.GetModuleConfig().GetSetupCommand()
 			}
 
 			// Call the loader to pre-populate everything
-			if err := loader.Load(cmd, f.GetModuleConfig().GetSetupCommandArgs()...); err != nil {
+			if err := loader.Load(cmd, formsPanel.GetModuleConfig().GetSetupCommandArgs()...); err != nil {
 				teabox.GetTeaboxApp().GetScreen().Clear()
 				taf.GetLogger().Panic(err)
 			}
@@ -232,8 +246,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	formPanel := NewTeaFormsPanel(mod)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
-		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle()).
-			SetStaticFlags(cmd)
+		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle()).SetStaticFlags(cmd)
 
 		// Update relative path to its absolute
 		if !strings.HasPrefix(cmd.GetCommandPath(), "/") {
