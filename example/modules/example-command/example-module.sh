@@ -3,30 +3,50 @@
 SOCK="/tmp/example-callback.sock"
 
 #
-# Set status of the logging output
+# Call socket with an API call
 #
-function set_status() {
-    m=$1
-    $(echo "LOGGER-STATUS::$m" | nc -w0 -U $SOCK)
+function sock() {
+    cls=$1
+    msg=$2
+    typ=$3
+    $(echo "$cls:$typ:$msg" | nc -w0 -U $SOCK)
     if [[ "$?" == "1" ]]; then
 	exit 1
     fi
+}
+
+
+#
+# Example how to operate loader progress and status
+#
+function load_form() {
+    sock init-reset
+    sock init-set-status "Loading Example Module..."
+    sock init-alloc-progress "3" int
+
+    for stat in This That "And That Too"
+    do
+	sleep 0.2
+	sock init-set-status "Now Loading $stat..."
+	sock init-inc-progress
+    done
+
+    sleep 0.3
+}
+
+
+#
+# Set status of the logging output
+#
+function set_status() {
+    sock logger-status "$1"
 }
 
 #
 # Set title of the logging output widget
 #
 function set_title() {
-    m=$1
-    $(echo "LOGGER-TITLE::$m" | nc -w0 -U $SOCK)
-    if [[ "$?" == "1" ]]; then
-	exit 1
-    fi
-}
-
-function load_form() {
-    echo "Loading form"
-    sleep 0.3
+    sock logger-title "$1"
 }
 
 
