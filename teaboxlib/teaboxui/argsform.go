@@ -178,13 +178,13 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 func (taf *TeaboxArgsForm) Init() TeaboxWindow {
 	taf.allModulesForms = NewTeaboxArgsFormPanels()
 
-	// Add intro window
+	// Add intro window (common for all)
 	taf.allModulesForms.AddPanel(teawidgets.INTRO_WINDOW_COMMON, teawidgets.NewTeaboxArgsIntroWindow(), true, true)
 
-	// Add argloading window
+	// Add argloading window (common for all)
 	taf.allModulesForms.AddPanel(teawidgets.LOAD_WINDOW_COMMON, teawidgets.NewTeaboxArgsLoadingWindow(), true, false)
 
-	// Build all the forms
+	// Build all individual forms
 	for _, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
 		taf.generateForms(mod)
 	}
