@@ -185,7 +185,7 @@ func (tmw *TeaboxArgsMainWindow) AddDropDownSimple(arg *teaboxlib.TeaConfModArg)
 	}
 
 	tmw.Form.AddDropDownSimple(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
-		//taf.AddArgument(tf.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
+		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
 	}, opts...)
 	return nil
 }
