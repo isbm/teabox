@@ -100,7 +100,7 @@ func NewTeaboxSocketServer() *TeaboxSocketServer {
 }
 
 // AddLocalActions are actions that are added per a specific widget implementation. They define their specific APIs.
-func (tss *TeaboxSocketServer) AddLocalAction(action func(call *TeaboxAPICall)) *TeaboxSocketServer {
+func (tss *TeaboxSocketServer) AddLocalAction(actions ...func(call *TeaboxAPICall)) *TeaboxSocketServer {
 	for {
 		if !tss.mtx {
 			break
@@ -111,10 +111,12 @@ func (tss *TeaboxSocketServer) AddLocalAction(action func(call *TeaboxAPICall)) 
 	tss.mtx = true
 	// Merge action after start
 	if tss.listener != nil {
-		tss.listener.AddActions(action)
+		for _, action := range actions {
+			tss.listener.AddActions(action)
+		}
 	} else {
 		// Listener is not yet started, all actions will be taken from here
-		tss.localActions = append(tss.localActions, action)
+		tss.localActions = append(tss.localActions, actions...)
 	}
 	tss.mtx = false
 
