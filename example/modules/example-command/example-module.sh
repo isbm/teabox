@@ -26,14 +26,16 @@ function load_form() {
 
     for stat in This That "And That Too"
     do
-	sleep 0.3
+	sleep 0.1
 	api init-set-status "Now Loading $stat..."
 	api init-inc-progress
 
 	# Reset fields
+	api field-set-by-ord "{0}/etc|/usr/local/etc|/opt/etc"
 	api field-set-by-ord "{1}ZX-80 Spectrum|Atari|S/390"
 	api field-set-by-ord "{2}Borat Sagdiev"
-	api field-set-by-ord "{4}false"
+	api field-set-by-ord "{3}false" bool
+	api field-set-by-ord "{4}false" bool
     done
 
     sleep 0.3
