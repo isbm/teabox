@@ -9,23 +9,32 @@ import (
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
+// Operations for the widget update. This is internal only here, don't use outside.
+const (
+	__OP_W_ADD = iota
+	__OP_W_SET
+	__OP_W_CLR
+)
+
 type TeaboxArgsMainWindow struct {
 	cmdId, title, subtitle string
 	flags                  []string
-	argset                 map[string]string // map of strings for named arguments.
-	argindex               []string          // an array of named arguments for args ordering.
+	argset                 map[string]string                   // map of strings for named arguments.
+	argindex               []string                            // an array of named arguments for args ordering.
+	labeledArg             map[string]*teaboxlib.TeaConfModArg // map of label to arg object pointer. Used to find argument name by label (same as FormItem)
 
 	*crtview.Form
 }
 
 func NewTeaboxArgsMainWindow(title, subtitle string) *TeaboxArgsMainWindow {
 	return (&TeaboxArgsMainWindow{
-		Form:     crtview.NewForm(),
-		title:    title,
-		subtitle: subtitle,
-		flags:    []string{},
-		argset:   map[string]string{},
-		argindex: []string{},
+		Form:       crtview.NewForm(),
+		title:      title,
+		subtitle:   subtitle,
+		flags:      []string{},
+		argset:     map[string]string{},
+		argindex:   []string{},
+		labeledArg: map[string]*teaboxlib.TeaConfModArg{},
 	}).init()
 }
 
@@ -161,6 +170,7 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 // AddArgWidgets adds actual widgets for each argument
 func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand) {
 	for _, a := range cmd.GetArguments() {
+		tmw.labeledArg[a.GetWidgetLabel()] = a
 		switch a.GetWidgetType() {
 		case "dropdown", "list":
 			tmw.AddDropDownSimple(a)
@@ -238,31 +248,73 @@ func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error
 func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) {
 	return func(call *teaboxlib.TeaboxAPICall) {
 		switch call.GetClass() {
+
+		// Overwriting with the new values
 		case teaboxlib.FORM_SET_BY_LABEL:
+			tmw.updateField(call, tmw.GetFormItemByLabel(call.GetKey()), __OP_W_SET)
 		case teaboxlib.FORM_SET_BY_ORD:
-			item := tmw.GetFormItem(call.GetKeyAsInt())
+			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_SET)
 
-			// Reset all supported fields
-			switch field := item.(type) {
-			case *crtview.InputField:
-				field.SetText(call.GetValue().(string))
-			case *crtview.CheckBox:
-				// TODO: Setting state still generates wrong args
-				field.SetChecked(call.GetBool())
-			case *crtview.DropDown:
-				// TODO: Dropdown needs reset of the caller function :-(
-				opts := []*crtview.DropDownOption{}
-				for _, opt := range strings.Split(call.GetString(), "|") {
-					opts = append(opts, crtview.NewDropDownOption(strings.TrimSpace(opt)))
-				}
-				field.SetOptions(nil, opts...)
-			}
-
+		// Adding/merging new values
 		case teaboxlib.FORM_ADD_BY_LABEL:
+			tmw.updateField(call, tmw.GetFormItemByLabel(call.GetKey()), __OP_W_ADD)
 		case teaboxlib.FORM_ADD_BY_ORD:
+			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_ADD)
 
+		// Clearing/resetting
 		case teaboxlib.FORM_CLR_BY_LABEL:
+			tmw.updateField(call, tmw.GetFormItemByLabel(call.GetKey()), __OP_W_CLR)
 		case teaboxlib.FORM_CLR_BY_ORD:
+			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_CLR)
+		}
+	}
+}
+
+func (tmw *TeaboxArgsMainWindow) updateField(call *teaboxlib.TeaboxAPICall, item crtview.FormItem, op int) {
+	arg := tmw.labeledArg[item.GetLabel()]
+
+	// Reset all supported fields
+	switch field := item.(type) {
+	case *crtview.InputField:
+		switch op {
+		case __OP_W_SET:
+			field.SetText(call.GetValue().(string))
+		case __OP_W_ADD:
+			field.SetText(field.GetText() + call.GetValue().(string))
+		case __OP_W_CLR:
+			field.SetText("")
+		}
+
+	case *crtview.CheckBox:
+		if op != __OP_W_CLR {
+			field.SetChecked(call.GetBool())
+			if call.GetBool() {
+				tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
+			} else {
+				tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
+			}
+		} else {
+			// Clear sets to false
+			field.SetChecked(false)
+			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
+		}
+
+	case *crtview.DropDown:
+		// XXX: Update does not override static value if not selected
+		opts := []*crtview.DropDownOption{}
+		for _, opt := range strings.Split(call.GetString(), "|") {
+			opts = append(opts, crtview.NewDropDownOption(strings.TrimSpace(opt)))
+		}
+		switch op {
+		case __OP_W_ADD:
+			field.AddOptions(opts...)
+		case __OP_W_SET:
+			field.SetOptions(func(index int, option *crtview.DropDownOption) {
+				tmw.AddArgument(tmw.GetId(), tmw.labeledArg[field.GetLabel()].GetArgName(), strings.TrimSpace(option.GetText()))
+			}, opts...)
+		case __OP_W_CLR:
+			field.SetOptions(nil, []*crtview.DropDownOption{}...)
+			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
 		}
 	}
 }
