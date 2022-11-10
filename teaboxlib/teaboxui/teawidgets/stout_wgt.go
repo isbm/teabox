@@ -34,7 +34,7 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.titleBar = crtview.NewTextView()
 	c.titleBar.SetBackgroundColor(tcell.NewRGBColor(0x88, 0x88, 0x88))
 	c.titleBar.SetTextColor(tcell.ColorBlack)
-	c.titleBar.SetText("STDOUT output:")
+	c.titleBar.SetText("")
 
 	c.AddItem(c.titleBar, 1, 0, false)
 
@@ -54,19 +54,18 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.statusBar = crtview.NewTextView()
 	c.statusBar.SetBackgroundColor(tcell.ColorDarkGrey)
 	c.statusBar.SetTextColor(tcell.ColorBlack)
-	c.statusBar.SetText("some status here")
+	c.statusBar.SetText("")
 	c.AddItem(c.statusBar, 1, 0, false)
 
 	// Action definition
 	c.action = func(call *teaboxlib.TeaboxAPICall) {
 		switch call.GetClass() {
-		case "LOGGER-STATUS":
+		case teaboxlib.LOGGER_STATUS:
 			c.statusBar.SetText(call.GetString())
-			teabox.GetTeaboxApp().Draw()
-		case "LOGGER-TITLE":
+		case teaboxlib.LOGGER_TITLE:
 			c.titleBar.SetText(call.GetString())
-			teabox.GetTeaboxApp().Draw()
 		}
+		teabox.GetTeaboxApp().Draw()
 	}
 
 	return c

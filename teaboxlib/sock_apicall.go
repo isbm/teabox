@@ -3,6 +3,7 @@ package teaboxlib
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -74,7 +75,7 @@ func (ac *TeaboxAPICall) parse(data []byte) {
 	}
 
 	// Set API class
-	ac.class = strings.ToUpper(tokens[0])
+	ac.class = strings.ToLower(tokens[0])
 
 	// Set supported types
 	switch tokens[1] {
@@ -141,7 +142,10 @@ func (ac *TeaboxAPICall) GetBool() bool {
 // Otherwise it will be always negative value.
 func (ac *TeaboxAPICall) GetInt() int {
 	if ac.GetType() == "int" {
-		return ac.GetValue().(int)
+		v, err := strconv.Atoi(strings.TrimSpace(fmt.Sprintf("%v", ac.GetValue())))
+		if err == nil {
+			return v
+		}
 	}
 	return -1
 }

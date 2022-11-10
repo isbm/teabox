@@ -56,11 +56,7 @@ func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize b
 
 func (tfp *TeaFormsPanel) StartListener() error {
 	// TODO: Add widget update handler action. Currently a noop dummy
-	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {
-		switch call.GetClass() {
-		case "W":
-		}
-	})
+	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {})
 
 	// Run the Unix server instance
 	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(tfp.moduleConfig.GetCallbackPath()); err != nil {
@@ -143,17 +139,30 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 			taf.GetLogger().Panic(err)
 		}
 
+		// TODO: Add a Unix socket hook for preloader and values to the form
+		/*
+			1. Insert an action that will receive RPC calls to update progress bar and status bar (what's going on during preload)
+			   This action will update currently visible loader window.
+			   There must be a way to reset it after it is hidden
+
+			2. Insert an action that will receive RPC calls to update currently active but hidden form.
+			3. Remove all the actions after the cycle is finished.
+		*/
+
 		if f.GetModuleConfig().GetSetupCommand() != "" {
 			// Show preload form first
 			taf.allModulesForms.SetCurrentPanel(teawidgets.LOAD_WINDOW_COMMON)
 			loader := taf.allModulesForms.GetPanelByName(teawidgets.LOAD_WINDOW_COMMON).(*teawidgets.TeaboxArgsLoadingWindow)
-			loader.SetAction(func() {
+			loader.SetAfterLoadAction(func() {
 				// TODO: Hook-up Unix receiver with the pre-loader
 
 				// Load finished, so show the main form
 				taf.allModulesForms.SetCurrentPanel(id)
 				teabox.GetTeaboxApp().Draw()
 			})
+
+			// Set receiver hook
+			teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(loader.GetSocketAcceptAction())
 
 			// Loader command could have relative path or absolute.
 			// Current directory ("./") is not supported
@@ -219,7 +228,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	}
 
 	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
-	// TODO: Define action for updating widgets
+	// TODO: Define action for updating widgets inside the form
 	formPanel := NewTeaFormsPanel(mod)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!

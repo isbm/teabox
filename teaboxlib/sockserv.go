@@ -113,6 +113,7 @@ func (tss *TeaboxSocketServer) AddLocalAction(action func(call *TeaboxAPICall)) 
 	if tss.listener != nil {
 		tss.listener.AddActions(action)
 	} else {
+		// Listener is not yet started, all actions will be taken from here
 		tss.localActions = append(tss.localActions, action)
 	}
 	tss.mtx = false
