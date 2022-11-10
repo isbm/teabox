@@ -169,6 +169,9 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 				teabox.GetTeaboxApp().GetScreen().Clear()
 				taf.GetLogger().Panic(err)
 			}
+		} else {
+			// No loader specified, show the form "as is" directly
+			taf.allModulesForms.SetCurrentPanel(id)
 		}
 	} else {
 		panic(fmt.Sprintf("Panel %s was not found", id))
