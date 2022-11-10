@@ -234,3 +234,35 @@ func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error
 
 	return nil
 }
+
+func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) {
+	return func(call *teaboxlib.TeaboxAPICall) {
+		switch call.GetClass() {
+		case teaboxlib.FORM_SET_BY_LABEL:
+		case teaboxlib.FORM_SET_BY_ORD:
+			item := tmw.GetFormItem(call.GetKeyAsInt())
+
+			// Reset all supported fields
+			switch field := item.(type) {
+			case *crtview.InputField:
+				field.SetText(call.GetValue().(string))
+			case *crtview.CheckBox:
+				// TODO: Setting state still generates wrong args
+				field.SetChecked(call.GetBool())
+			case *crtview.DropDown:
+				// TODO: Dropdown needs reset of the caller function :-(
+				opts := []*crtview.DropDownOption{}
+				for _, opt := range strings.Split(call.GetString(), "|") {
+					opts = append(opts, crtview.NewDropDownOption(strings.TrimSpace(opt)))
+				}
+				field.SetOptions(nil, opts...)
+			}
+
+		case teaboxlib.FORM_ADD_BY_LABEL:
+		case teaboxlib.FORM_ADD_BY_ORD:
+
+		case teaboxlib.FORM_CLR_BY_LABEL:
+		case teaboxlib.FORM_CLR_BY_ORD:
+		}
+	}
+}
