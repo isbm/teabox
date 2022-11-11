@@ -305,13 +305,19 @@ func (tmw *TeaboxArgsMainWindow) updateField(call *teaboxlib.TeaboxAPICall, item
 		for _, opt := range strings.Split(call.GetString(), "|") {
 			opts = append(opts, crtview.NewDropDownOption(strings.TrimSpace(opt)))
 		}
+		if len(opts) < 1 {
+			return
+		}
+
 		switch op {
 		case __OP_W_ADD:
 			field.AddOptions(opts...)
 		case __OP_W_SET:
 			field.SetOptions(func(index int, option *crtview.DropDownOption) {
-				tmw.AddArgument(tmw.GetId(), tmw.labeledArg[field.GetLabel()].GetArgName(), strings.TrimSpace(option.GetText()))
+				tmw.AddArgument(tmw.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
 			}, opts...)
+			// Pre-select a first visible option in a dropdown
+			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), opts[0].GetText())
 		case __OP_W_CLR:
 			field.SetOptions(nil, []*crtview.DropDownOption{}...)
 			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
