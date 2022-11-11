@@ -125,7 +125,7 @@ func NewTeaboxMainWindow() *TeaboxMainWindow {
 
 	tmw.menu = NewTeaboxMenu()
 	tmw.menu.SetOnSelectedFunc(func(i int, li *crtview.ListItem) {
-		tmw.formWindow.ShowForm(strings.TrimSpace(li.GetMainText()))
+		tmw.formWindow.ShowModuleForm(strings.TrimSpace(li.GetMainText()))
 	})
 	tmw.p.GetContainer().AddItem(tmw.menu.GetWidget(), teaboxlib.MAIN_MENU_WIDTH, 1, true)
 

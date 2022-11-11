@@ -96,7 +96,11 @@ func (tc *TeaConf) initConfig() error {
 				m := NewTeaConfModule(title)
 				m.modulePath = path.Dir(pth)
 				if c.Root().Raw()["commands"] != nil {
-					m.SetCondition(c.Root().Raw()["conditions"]).SetCommands(c.Root().Raw()["commands"]).SetCallbackPath(c.Root().Raw()["callback"])
+					m.SetCondition(c.Root().Raw()["conditions"]).
+						SetCommands(c.Root().Raw()["commands"]).
+						SetCallbackPath(c.Root().String("callback", "")).
+						SetLandingPageType(c.Root().String("langing", "")).
+						SetSetupCommand(c.Root().String("setup", ""))
 				}
 
 				groupId := c.Root().String("group", "")

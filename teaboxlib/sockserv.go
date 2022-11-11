@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 )
 
 type TeaboxSocketListener struct {
@@ -52,13 +53,18 @@ func (tsl *TeaboxSocketListener) Start() error {
 			return err
 		}
 
+		// Go over all registered calls and send them the API instruction calls
 		go func() {
+			var call *TeaboxAPICall
+			var data string
+
+			buff := bytes.NewBufferString(data)
+			if _, err := io.Copy(buff, bind); err == nil {
+				call = NewTeaboxAPICall(buff.Bytes())
+			}
+
 			for _, a := range tsl.actions {
-				data := ""
-				buff := bytes.NewBufferString(data)
-				if _, err := io.Copy(buff, bind); err == nil {
-					a(NewTeaboxAPICall(buff.Bytes()))
-				}
+				a(call)
 			}
 		}()
 	}
@@ -80,6 +86,7 @@ Unix Socket Server, runs the listener above and terminates it when required.
 This server also registers new listeners in Start(path).
 */
 type TeaboxSocketServer struct {
+	mtx           bool
 	listener      *TeaboxSocketListener
 	localActions  []func(*TeaboxAPICall)
 	globalActions []func(*TeaboxAPICall)
@@ -93,8 +100,26 @@ func NewTeaboxSocketServer() *TeaboxSocketServer {
 }
 
 // AddLocalActions are actions that are added per a specific widget implementation. They define their specific APIs.
-func (tss *TeaboxSocketServer) AddLocalAction(action func(call *TeaboxAPICall)) *TeaboxSocketServer {
-	tss.localActions = append(tss.localActions, action)
+func (tss *TeaboxSocketServer) AddLocalAction(actions ...func(call *TeaboxAPICall)) *TeaboxSocketServer {
+	for {
+		if !tss.mtx {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	tss.mtx = true
+	// Merge action after start
+	if tss.listener != nil {
+		for _, action := range actions {
+			tss.listener.AddActions(action)
+		}
+	} else {
+		// Listener is not yet started, all actions will be taken from here
+		tss.localActions = append(tss.localActions, actions...)
+	}
+	tss.mtx = false
+
 	return tss
 }
 
