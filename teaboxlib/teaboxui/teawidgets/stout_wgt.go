@@ -3,6 +3,7 @@ package teawidgets
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
@@ -105,8 +106,7 @@ func (tsw *TeaSTDOUTWindow) Action(cmdpath string, cmdargs ...string) error {
 	cmd.Stderr = tsw.GetWindow()
 
 	if err := cmd.Run(); err != nil {
-		teabox.GetTeaboxApp().Stop()
-		fmt.Println("Error:", err)
+		return fmt.Errorf(fmt.Sprintf("Error: command \"%s %s\" quit as %s", cmdpath, strings.Join(cmdargs, " "), err.Error()))
 	}
 
 	return nil
