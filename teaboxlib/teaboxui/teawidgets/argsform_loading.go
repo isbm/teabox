@@ -1,6 +1,7 @@
 package teawidgets
 
 import (
+	"fmt"
 	"os/exec"
 
 	"github.com/gdamore/tcell/v2"
@@ -143,7 +144,7 @@ func (ld *TeaboxArgsLoadingWindow) GetSocketAcceptAction() func(*teaboxlib.Teabo
 func (ld *TeaboxArgsLoadingWindow) Load(cmd string, args ...string) error {
 	go func() {
 		if err := exec.Command(cmd, args...).Run(); err != nil {
-			ld.GetLogger().Panic(err)
+			teabox.GetTeaboxApp().Stop(fmt.Sprintf("Error: Failure while loading form from setup command.\nCommand: %s\nargs: %v\nSystem exit: %s\n", cmd, args, err.Error()))
 		}
 
 		ld.action()

@@ -84,7 +84,7 @@ func (tm *TeaboxMenu) Init() TeaboxWindow {
 	tm.items.SetSelectedFunc(func(i int, li *crtview.ListItem) {
 		ref := li.GetReference().(teaboxlib.TeaConfComponent)
 		if ref.GetTitle() == teaboxlib.LABEL_EXIT {
-			teabox.GetTeaboxApp().Stop()
+			teabox.GetTeaboxApp().Stop("And remember: have a lot of fun!")
 		} else if ref.IsGroupContainer() {
 			tm.ShowSubmenu(ref.GetTitle())
 		} else if ref.GetType() == "module" {
