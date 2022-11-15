@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
+	"github.com/isbm/crtview/crtwin"
 	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
@@ -15,6 +16,10 @@ const (
 )
 
 type TeaboxWorkspacePanels struct {
+	alertPopup   *crtwin.ModalDialog
+	warningPopup *crtwin.ModalDialog
+	infoPopup    *crtwin.ModalDialog
+
 	container *crtview.Flex
 	*crtview.Panels
 }
@@ -37,6 +42,28 @@ func NewTeaboxWorkspacePanels(title string) *TeaboxWorkspacePanels {
 	wspace.AddItem(crtview.NewBox(), 1, 1, false)
 
 	tbp.AddPanel("main", wspace, true, true)
+
+	return tbp.initDialogs()
+}
+
+func (tbp *TeaboxWorkspacePanels) initDialogs() *TeaboxWorkspacePanels {
+	tbp.infoPopup = crtwin.NewModalDialog(crtwin.DIALOG_OK | crtwin.DIALOG_TYPE_ALT_INFO)
+	tbp.warningPopup = crtwin.NewModalDialog(crtwin.DIALOG_OK | crtwin.DIALOG_TYPE_WARNING)
+	tbp.alertPopup = crtwin.NewModalDialog(crtwin.DIALOG_OK | crtwin.DIALOG_TYPE_ALERT)
+
+	for _, alert := range []*crtwin.ModalDialog{tbp.infoPopup, tbp.warningPopup, tbp.alertPopup} {
+		alert.SetTitle("")
+		alert.SetMessage("")
+		alert.SetButtonsAlign(crtview.AlignCenter)
+		alert.SetSize(40, 10) // Default
+		alert.SetOnConfirmAction(func() {
+			tbp.SetCurrentPanel("main")
+		})
+	}
+
+	tbp.AddPanel("_info-popup", tbp.infoPopup, false, false)
+	tbp.AddPanel("_alert-popup", tbp.alertPopup, false, false)
+	tbp.AddPanel("_warn-popup", tbp.warningPopup, false, false)
 
 	return tbp
 }
@@ -121,17 +148,15 @@ func NewTeaboxMainWindow() *TeaboxMainWindow {
 	tmw.title = teabox.GetTeaboxApp().GetGlobalConfig().GetTitle()
 
 	// Whole workspace
-	tmw.p = NewTeaboxWorkspacePanels(tmw.title)
-
 	tmw.menu = NewTeaboxMenu()
 	tmw.menu.SetOnSelectedFunc(func(i int, li *crtview.ListItem) {
 		tmw.formWindow.ShowModuleForm(strings.TrimSpace(li.GetMainText()))
 	})
+
+	tmw.p = NewTeaboxWorkspacePanels(tmw.title)
+	tmw.formWindow = NewTeaboxArgsForm(tmw.p)
+
 	tmw.p.GetContainer().AddItem(tmw.menu.GetWidget(), teaboxlib.MAIN_MENU_WIDTH, 1, true)
-
-	tmw.formWindow = NewTeaboxArgsForm()
-	tmw.formWindow.Init()
-
 	tmw.p.GetContainer().AddItem(tmw.formWindow.GetWidget(), 0, 1, false)
 
 	return tmw
