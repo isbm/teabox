@@ -81,12 +81,15 @@ func (tfp *TeaFormsPanel) StartListener() error {
 }
 
 // ShowLandingWindow and start Unix socket server listener with the current callback pack
-func (tfp *TeaFormsPanel) ShowLandingWindow() error {
+func (tfp *TeaFormsPanel) ShowLandingWindow(id string) error {
 	// Setup local action for the future instance
 	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
-
-	// TODO: Landing window should be selectable/configurable
-	tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	switch id {
+	case "logger":
+		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	default:
+		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	}
 
 	return nil
 }
@@ -269,7 +272,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 			// - Checklist done/todo progress screen that has various features, such as progress-bar, status etc (TODO)
 			//
 			// NOTE: landing window also starts the listener, to which Action() below connects via resulting command Action() calls.
-			formPanel.ShowLandingWindow()
+			formPanel.ShowLandingWindow(mod.GetLandingPageType())
 			go func() {
 				// Run command on the landing window
 				var panelPtr string = "_info-popup"
