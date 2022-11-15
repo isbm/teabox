@@ -47,19 +47,14 @@ func (tmw *TeaboxArgsMainWindow) init() *TeaboxArgsMainWindow {
 
 	// Colors
 	tmw.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
-	tmw.SetFieldTextColor(tcell.ColorWhite)
+	tmw.SetFieldTextColor(tcell.ColorBlack.TrueColor())
 	tmw.SetFieldBackgroundColor(teaboxlib.WORKSPACE_HEADER)
 	tmw.SetFieldBackgroundColorFocused(tcell.ColorGreenYellow)
-	tmw.SetFieldTextColorFocused(teaboxlib.WORKSPACE_BACKGROUND)
-
-	tmw.SetButtonBackgroundColor(teaboxlib.FORM_BUTTON_BACKGROUND)
-	tmw.SetButtonBackgroundColorFocused(teaboxlib.FORM_BUTTON_BACKGROUND_SELECTED)
-	tmw.SetButtonTextColor(teaboxlib.FORM_BUTTON_TEXT)
-	tmw.SetButtonTextColorFocused(teaboxlib.FORM_BUTTON_TEXT_SELECTED)
+	tmw.SetFieldTextColorFocused(tcell.ColorBlack.TrueColor())
 
 	// Buttons align
 	tmw.SetButtonsAlign(crtview.AlignRight)
-	tmw.SetButtonsToBottom()
+	tmw.SetButtonsToBottom(true)
 
 	return tmw
 }
