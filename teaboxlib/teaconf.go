@@ -20,9 +20,10 @@ TeaConf is a global config of everything.
 */
 
 type TeaConf struct {
-	title        string
-	contentPath  string
-	initConfPath string
+	title              string
+	contentPath        string
+	initConfPath       string
+	callbackSocketPath string
 
 	modIndex []TeaConfComponent
 	wzlib_logger.WzLogger
@@ -32,8 +33,12 @@ func NewTeaConf(appname string) *TeaConf {
 	tc := new(TeaConf)
 	tc.modIndex = []TeaConfComponent{}
 
-	tc.contentPath = nanoconf.NewConfig(appname+".conf").Root().String("content", "")
+	cfg := nanoconf.NewConfig(appname + ".conf")
+
+	tc.contentPath = cfg.Root().String("content", "")
+	tc.callbackSocketPath = cfg.Root().String("callback", "")
 	tc.initConfPath = path.Join(tc.contentPath, "init.conf")
+
 	if err := tc.initConfig(); err != nil {
 		panic(fmt.Sprintf("Unable to initialise modules: %s", err))
 	}
@@ -98,7 +103,7 @@ func (tc *TeaConf) initConfig() error {
 				if c.Root().Raw()["commands"] != nil {
 					m.SetCondition(c.Root().Raw()["conditions"]).
 						SetCommands(c.Root().Raw()["commands"]).
-						SetCallbackPath(c.Root().String("callback", "")).
+						SetCallbackPath(tc.callbackSocketPath).
 						SetLandingPageType(c.Root().String("langing", "")).
 						SetSetupCommand(c.Root().String("setup", ""))
 				}
