@@ -29,4 +29,7 @@ type TeaboxLandingWindow interface {
 
 	// Return window action on Unix socket calls, specific per this widget
 	GetWindowAction() func(call *teaboxlib.TeaboxAPICall)
+
+	// Reset all the values to the initial state
+	Reset()
 }

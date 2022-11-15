@@ -34,7 +34,6 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.titleBar = crtview.NewTextView()
 	c.titleBar.SetBackgroundColor(tcell.NewRGBColor(0x88, 0x88, 0x88))
 	c.titleBar.SetTextColor(tcell.ColorBlack)
-	c.titleBar.SetText("")
 
 	c.AddItem(c.titleBar, 1, 0, false)
 
@@ -54,7 +53,6 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.statusBar = crtview.NewTextView()
 	c.statusBar.SetBackgroundColor(tcell.ColorDarkGrey)
 	c.statusBar.SetTextColor(tcell.ColorBlack)
-	c.statusBar.SetText("")
 	c.AddItem(c.statusBar, 1, 0, false)
 
 	// Action definition
@@ -68,7 +66,16 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 		teabox.GetTeaboxApp().Draw()
 	}
 
+	c.Reset()
+
 	return c
+}
+
+// Reset all content to the initial values
+func (tsw *TeaSTDOUTWindow) Reset() {
+	tsw.statusBar.SetText("")
+	tsw.titleBar.SetText("")
+	tsw.w.SetText("")
 }
 
 func (tsw *TeaSTDOUTWindow) AsWidgetPrimitive() crtview.Primitive {
