@@ -136,9 +136,9 @@ func NewTeaboxMainWindow() *TeaboxMainWindow {
 	teabox.GetTeaboxApp().EnableMouse(true)
 	teabox.GetTeaboxApp().SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyTab:
+		case tcell.KeyRight:
 			teabox.GetTeaboxApp().SetFocus(tmw.formWindow.GetWidget())
-		case tcell.KeyBacktab:
+		case tcell.KeyLeft:
 			teabox.GetTeaboxApp().SetFocus(tmw.menu.items)
 		default:
 			//fmt.Println(event.Key())
