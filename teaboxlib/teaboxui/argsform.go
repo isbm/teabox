@@ -35,8 +35,7 @@ func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule, parent *TeaboxArgsForm) *Te
 		tfp.landingPage = teawidgets.NewTeaSTDOUTWindow()
 		tfp.AddPanel(teawidgets.LANDING_WINDOW_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
 	default:
-		teabox.GetTeaboxApp().Stop()
-		fmt.Printf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType())
+		panic(fmt.Sprintf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType()))
 	}
 
 	return tfp
@@ -75,8 +74,7 @@ func (tfp *TeaFormsPanel) StartListener() error {
 
 	// Run the Unix server instance
 	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(tfp.moduleConfig.GetCallbackPath()); err != nil {
-		teabox.GetTeaboxApp().Stop()
-		fmt.Println(err) // That would be a general system problem
+		panic(fmt.Sprintf("Error starting listener: %s", err.Error()))
 	}
 
 	return nil
@@ -86,6 +84,8 @@ func (tfp *TeaFormsPanel) StartListener() error {
 func (tfp *TeaFormsPanel) ShowLandingWindow() error {
 	// Setup local action for the future instance
 	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
+
+	// TODO: Landing window should be selectable/configurable
 	tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
 
 	return nil
@@ -231,8 +231,7 @@ func (taf *TeaboxArgsForm) ShowIntroScreen() {
 
 func (taf *TeaboxArgsForm) onError(err error) {
 	if err != nil {
-		teabox.GetTeaboxApp().Stop()
-		taf.GetLogger().Error(err.Error())
+		panic(err.Error())
 	}
 }
 
