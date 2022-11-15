@@ -55,7 +55,7 @@ func (tbp *TeaboxWorkspacePanels) initDialogs() *TeaboxWorkspacePanels {
 		alert.SetTitle("")
 		alert.SetMessage("")
 		alert.SetButtonsAlign(crtview.AlignCenter)
-		alert.SetSize(40, 10) // Default
+		alert.SetSize(40, 15) // Default
 		alert.SetOnConfirmAction(func() {
 			tbp.SetCurrentPanel("main")
 		})
