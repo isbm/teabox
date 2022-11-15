@@ -7,6 +7,7 @@ import (
 
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/isbm/crtview"
+	"github.com/isbm/crtview/crtwin"
 	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 	"gitlab.com/isbm/teabox/teaboxlib/teaboxui/teawidgets"
@@ -276,25 +277,25 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 			go func() {
 				// Run command on the landing window
 				var panelPtr string = "_info-popup"
+				var alert *crtwin.ModalDialog
 				modcmd := taf.modCmdIndex[f.GetId()]
 				if err := formPanel.GetLandingPage().Action(modcmd.GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {
-					taf.workspace.alertPopup.SetTitle("Module Error")
-					taf.workspace.alertPopup.SetMessage(fmt.Sprintf("Error while calling\n%s\n%s", modcmd.GetCommandPath(), err.Error()))
-					taf.workspace.alertPopup.SetOnConfirmAction(func() {
-						formPanel.StopLandingWindow(f.GetId())
-						taf.workspace.HidePanel(panelPtr)
-					})
+					alert = taf.workspace.alertPopup
+					alert.SetTitle(fmt.Sprintf("%s: Module Error", mod.GetTitle()))
+					alert.SetMessage(fmt.Sprintf("Error while calling\n%s\n%s", modcmd.GetCommandPath(), err.Error()))
 					panelPtr = "_alert-popup"
+
 				} else {
-					taf.workspace.infoPopup.SetTitle("Success!")
-					taf.workspace.infoPopup.SetMessage(fmt.Sprintf("%s finished", mod.GetTitle()))
-					taf.workspace.infoPopup.SetOnConfirmAction(func() {
-						// Reset landing window to the caller form as done and stop the listener
-						formPanel.StopLandingWindow(f.GetId())
-						taf.workspace.HidePanel(panelPtr)
-					})
+					alert = taf.workspace.infoPopup
+					alert.SetTitle("Success!")
+					alert.SetMessage(fmt.Sprintf("%s finished", mod.GetTitle()))
 				}
+				alert.SetOnConfirmAction(func() {
+					formPanel.StopLandingWindow(f.GetId())
+					taf.workspace.HidePanel(panelPtr)
+				})
 				taf.workspace.ShowPanel(panelPtr)
+				teabox.GetTeaboxApp().SetFocus(alert.GetButton(0)) // Focus can be set only if Primitive is visible
 			}()
 		})
 
