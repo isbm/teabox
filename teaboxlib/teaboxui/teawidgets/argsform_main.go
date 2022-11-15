@@ -39,7 +39,6 @@ func NewTeaboxArgsMainWindow(title, subtitle string) *TeaboxArgsMainWindow {
 }
 
 func (tmw *TeaboxArgsMainWindow) init() *TeaboxArgsMainWindow {
-	// XXX: ID (Set/Get by ID) needs to be re-thought
 	tmw.SetTitle(fmt.Sprintf("%s - %s", tmw.title, tmw.subtitle))
 	tmw.cmdId = fmt.Sprintf("%s - %s", tmw.title, tmw.subtitle)
 
@@ -173,7 +172,7 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 			tmw.AddInputField(a)
 		case "toggle":
 			tmw.AddCheckBox(a)
-		case "silent": // XXX: should be deprecated from the specs
+		case "silent": // TODO: should be deprecated from the specs
 		}
 	}
 }
@@ -295,7 +294,6 @@ func (tmw *TeaboxArgsMainWindow) updateField(call *teaboxlib.TeaboxAPICall, item
 		}
 
 	case *crtview.DropDown:
-		// XXX: Update does not override static value if not selected
 		opts := []*crtview.DropDownOption{}
 		for _, opt := range strings.Split(call.GetString(), "|") {
 			opts = append(opts, crtview.NewDropDownOption(strings.TrimSpace(opt)))
