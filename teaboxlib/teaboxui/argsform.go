@@ -7,6 +7,7 @@ import (
 
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/isbm/crtview"
+	"github.com/isbm/crtview/crtwin"
 	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 	"gitlab.com/isbm/teabox/teaboxlib/teaboxui/teawidgets"
@@ -14,17 +15,19 @@ import (
 
 // TeaFormsPanel is a layer of windows, and it contains many TeaForm instances to switch between them.
 type TeaFormsPanel struct {
+	parent       *TeaboxArgsForm
 	landingPage  teawidgets.TeaboxLandingWindow
 	moduleConfig *teaboxlib.TeaConfModule
 	objref       map[string]interface{}
 	*crtview.Panels
 }
 
-func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule) *TeaFormsPanel {
+func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule, parent *TeaboxArgsForm) *TeaFormsPanel {
 	tfp := &TeaFormsPanel{
 		Panels:       crtview.NewPanels(),
 		objref:       map[string]interface{}{},
 		moduleConfig: conf,
+		parent:       parent,
 	}
 
 	// Init landing
@@ -33,8 +36,7 @@ func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule) *TeaFormsPanel {
 		tfp.landingPage = teawidgets.NewTeaSTDOUTWindow()
 		tfp.AddPanel(teawidgets.LANDING_WINDOW_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
 	default:
-		teabox.GetTeaboxApp().Stop()
-		fmt.Printf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType())
+		panic(fmt.Sprintf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType()))
 	}
 
 	return tfp
@@ -73,25 +75,31 @@ func (tfp *TeaFormsPanel) StartListener() error {
 
 	// Run the Unix server instance
 	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(tfp.moduleConfig.GetCallbackPath()); err != nil {
-		teabox.GetTeaboxApp().Stop()
-		fmt.Println(err) // That would be a general system problem
+		panic(fmt.Sprintf("Error starting listener: %s", err.Error()))
 	}
 
 	return nil
 }
 
 // ShowLandingWindow and start Unix socket server listener with the current callback pack
-func (tfp *TeaFormsPanel) ShowLandingWindow() error {
+func (tfp *TeaFormsPanel) ShowLandingWindow(id string) error {
 	// Setup local action for the future instance
 	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
-	tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	switch id {
+	case "logger":
+		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	default:
+		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	}
 
 	return nil
 }
 
 // StopLandingWindow switches back to the caller form and stops the Unix socket listener
 func (tfp *TeaFormsPanel) StopLandingWindow(fid string) error {
-	tfp.SetCurrentPanel(fid)
+	tfp.parent.ShowIntroScreen()
+	tfp.SetCurrentPanel(fid) // Close everything, back to the selector
+	tfp.landingPage.Reset()  // Cleanup/reset the lander
 	return tfp.landingPage.StopListener()
 }
 
@@ -108,6 +116,7 @@ func (tfp *TeaFormsPanel) AddForm(title, subtitle string) *teawidgets.TeaboxArgs
 
 // TeaboxArgsForm contains a layers with TeaForms on it, also their output, intro screen, callback screens etc.
 type TeaboxArgsForm struct {
+	workspace *TeaboxWorkspacePanels
 	TeaboxBaseWindow
 
 	/*
@@ -133,11 +142,12 @@ type TeaboxArgsForm struct {
 	wzlib_logger.WzLogger
 }
 
-func NewTeaboxArgsForm() *TeaboxArgsForm {
+func NewTeaboxArgsForm(workspace *TeaboxWorkspacePanels) *TeaboxArgsForm {
 	taf := new(TeaboxArgsForm)
 	taf.modCmdIndex = map[string]*teaboxlib.TeaConfModCommand{}
+	taf.workspace = workspace
 
-	return taf
+	return taf.init()
 }
 
 func (taf *TeaboxArgsForm) GetWidget() crtview.Primitive {
@@ -201,7 +211,7 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 	}
 }
 
-func (taf *TeaboxArgsForm) Init() TeaboxWindow {
+func (taf *TeaboxArgsForm) init() *TeaboxArgsForm {
 	taf.allModulesForms = NewTeaboxArgsFormPanels()
 
 	// Add intro window (common for all)
@@ -225,8 +235,7 @@ func (taf *TeaboxArgsForm) ShowIntroScreen() {
 
 func (taf *TeaboxArgsForm) onError(err error) {
 	if err != nil {
-		teabox.GetTeaboxApp().Stop()
-		taf.GetLogger().Error(err.Error())
+		panic(err.Error())
 	}
 }
 
@@ -243,7 +252,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 
 	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
 	// TODO: Define action for updating widgets inside the form
-	formPanel := NewTeaFormsPanel(mod)
+	formPanel := NewTeaFormsPanel(mod, taf)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
 		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle()).SetStaticFlags(cmd)
@@ -264,16 +273,29 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 			// - Checklist done/todo progress screen that has various features, such as progress-bar, status etc (TODO)
 			//
 			// NOTE: landing window also starts the listener, to which Action() below connects via resulting command Action() calls.
-			formPanel.ShowLandingWindow()
+			formPanel.ShowLandingWindow(mod.GetLandingPageType())
 			go func() {
 				// Run command on the landing window
-				if err := formPanel.GetLandingPage().Action(taf.modCmdIndex[f.GetId()].GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {
-					teabox.GetTeaboxApp().Stop()
-					fmt.Println("Error:", err)
-				}
+				var panelPtr string = "_info-popup"
+				var alert *crtwin.ModalDialog
+				modcmd := taf.modCmdIndex[f.GetId()]
+				if err := formPanel.GetLandingPage().Action(modcmd.GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {
+					alert = taf.workspace.alertPopup
+					alert.SetTitle(fmt.Sprintf("%s: Module Error", mod.GetTitle()))
+					alert.SetMessage(fmt.Sprintf("Error while calling\n%s\n%s", modcmd.GetCommandPath(), err.Error()))
+					panelPtr = "_alert-popup"
 
-				// Reset landing window to the caller form as done and stop the listener
-				formPanel.StopLandingWindow(f.GetId())
+				} else {
+					alert = taf.workspace.infoPopup
+					alert.SetTitle("Success!")
+					alert.SetMessage(fmt.Sprintf("%s finished", mod.GetTitle()))
+				}
+				alert.SetOnConfirmAction(func() {
+					formPanel.StopLandingWindow(f.GetId())
+					taf.workspace.HidePanel(panelPtr)
+				})
+				taf.workspace.ShowPanel(panelPtr)
+				teabox.GetTeaboxApp().SetFocus(alert.GetButton(0)) // Focus can be set only if Primitive is visible
 			}()
 		})
 

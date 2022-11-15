@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-SOCK="/tmp/example-callback.sock"
+SOCK="/tmp/teabox.sock"
 
 #
 # Call socket with an API call

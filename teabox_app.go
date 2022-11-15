@@ -7,6 +7,7 @@ import (
 
 // Global reference of the Application. It is accessed via GetTeaboxApp() function.
 var __APP_REF *TeaboxApplication
+var __MSG_REF string
 
 // TeaboxApplication singleton
 type TeaboxApplication struct {
@@ -32,6 +33,12 @@ func (ta *TeaboxApplication) GetGlobalConfig() *teaboxlib.TeaConf {
 	return ta.config
 }
 
+// Stop application
+func (ta *TeaboxApplication) Stop(message string) {
+	__MSG_REF = message
+	ta.Application.Stop()
+}
+
 // GetTeaboxApp is a factory that returns a singleton of an Application reference
 // if it wasn't creted before, it gets created.
 func GetTeaboxApp() *TeaboxApplication {
@@ -42,4 +49,8 @@ func GetTeaboxApp() *TeaboxApplication {
 		}
 	}
 	return __APP_REF
+}
+
+func GetTeaboxQuitMessage() string {
+	return __MSG_REF
 }

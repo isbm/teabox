@@ -3,6 +3,7 @@ package teawidgets
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
@@ -34,7 +35,6 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.titleBar = crtview.NewTextView()
 	c.titleBar.SetBackgroundColor(tcell.NewRGBColor(0x88, 0x88, 0x88))
 	c.titleBar.SetTextColor(tcell.ColorBlack)
-	c.titleBar.SetText("")
 
 	c.AddItem(c.titleBar, 1, 0, false)
 
@@ -54,7 +54,6 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 	c.statusBar = crtview.NewTextView()
 	c.statusBar.SetBackgroundColor(tcell.ColorDarkGrey)
 	c.statusBar.SetTextColor(tcell.ColorBlack)
-	c.statusBar.SetText("")
 	c.AddItem(c.statusBar, 1, 0, false)
 
 	// Action definition
@@ -68,7 +67,16 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 		teabox.GetTeaboxApp().Draw()
 	}
 
+	c.Reset()
+
 	return c
+}
+
+// Reset all content to the initial values
+func (tsw *TeaSTDOUTWindow) Reset() {
+	tsw.statusBar.SetText("")
+	tsw.titleBar.SetText("")
+	tsw.w.SetText("")
 }
 
 func (tsw *TeaSTDOUTWindow) AsWidgetPrimitive() crtview.Primitive {
@@ -98,8 +106,7 @@ func (tsw *TeaSTDOUTWindow) Action(cmdpath string, cmdargs ...string) error {
 	cmd.Stderr = tsw.GetWindow()
 
 	if err := cmd.Run(); err != nil {
-		teabox.GetTeaboxApp().Stop()
-		fmt.Println("Error:", err)
+		return fmt.Errorf(fmt.Sprintf("Error: command \"%s %s\" quit as %s", cmdpath, strings.Join(cmdargs, " "), err.Error()))
 	}
 
 	return nil
