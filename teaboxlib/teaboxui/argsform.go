@@ -175,10 +175,9 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 			taf.allModulesForms.SetCurrentPanel(teawidgets.LOAD_WINDOW_COMMON)
 			loader := taf.allModulesForms.GetPanelByName(teawidgets.LOAD_WINDOW_COMMON).(*teawidgets.TeaboxArgsLoadingWindow)
 			loader.SetAfterLoadAction(func() {
-				// TODO: Hook-up Unix receiver with the pre-loader
-
 				// Load finished, so show the main form
 				taf.allModulesForms.SetCurrentPanel(id)
+				teabox.GetTeaboxApp().SetFocus(taf.GetWidget())
 				teabox.GetTeaboxApp().Draw()
 			})
 
@@ -203,6 +202,7 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 		} else {
 			// No loader specified, show the form "as is" directly
 			taf.allModulesForms.SetCurrentPanel(id)
+			teabox.GetTeaboxApp().SetFocus(taf.GetWidget())
 		}
 	} else {
 		panic(fmt.Sprintf("Panel %s was not found", id))
