@@ -158,11 +158,9 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 	formsPanel, ok := taf.allModulesForms.GetPanelByName(id).(*TeaFormsPanel)
 	if ok {
 		if err := formsPanel.StartListener(); err != nil {
-			teabox.GetTeaboxApp().GetScreen().Clear()
-			taf.GetLogger().Panic(err)
+			teabox.GetTeaboxApp().Stop("Unable start listener: " + err.Error())
 		}
 
-		// TODO: Add a Unix socket hook for preloader and values to the form
 		/*
 			1. Insert an action that will receive RPC calls to update progress bar and status bar (what's going on during preload)
 			   This action will update currently visible loader window.
