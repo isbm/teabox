@@ -37,8 +37,8 @@ var INIT_SET_STATUS string = "init-set-status"
 
 var INIT_RESET string = "init-reset"
 
-// # Logger
-// --------
+// # Logger (lander)
+// -----------------
 //
 // Set status of the STDOUT dumper window. Example usage:
 //
@@ -51,6 +51,50 @@ var LOGGER_STATUS string = "logger-status"
 //	logger-title::"Output of the Apt Package Manager"
 
 var LOGGER_TITLE string = "logger-title"
+
+// # Progress (lander)
+// -------------------
+//
+// Set event status of an event. Example usage:
+//
+//   progress-event::"Godzilla happens"
+
+var PROGRESS_EVENT string = "progress-event"
+
+// Allocate progress steps to increment till full state. Example usage:
+//
+//   progress-allocate:int:5
+
+var PROGRESS_ALLOCATE string = "progress-allocate"
+
+// Increment progress by one step. Example usage:
+//
+//   progress-next::
+
+var PROGRESS_NEXT string = "progress-next"
+
+// Set progress value directly. Example usage:
+//
+//   progress-set:int:42
+
+var PROGRESS_SET string = "progress-set"
+
+// Set lookup prefix. This is a static string, which will be a trigger to pick it up
+// and set as a event message. Example usage:
+//
+//   progress-lookup-prefix::STATUS>
+//
+// When a command is called, STDOUT is piped through. Each line which starts with "STATUS>"
+// will be taken as a event message and will update eventbar.
+
+var PROGRESS_LOOKUP_PREFIX string = "progress-lookup-prefix"
+
+// Set lookup regex. This is a POSIX (!) regular expression, which acts as same as
+// "progress-lookup-prefix", except it is a regex. Example usage:
+//
+//   progress-lookup-regex::"^STATUS*"
+
+var PROGRESS_LOOKUP_REGEX string = "progress-lookup-regex"
 
 // # Form (any)
 // ------------
