@@ -33,7 +33,7 @@ func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule, parent *TeaboxArgsForm) *Te
 	// Init landing
 	switch tfp.moduleConfig.GetLandingPageType() {
 	case "logger":
-		tfp.landingPage = teawidgets.NewTeaSTDOUTWindow()
+		tfp.landingPage = teawidgets.NewTeaLoggerWindowLander()
 		tfp.AddPanel(teawidgets.LANDING_WINDOW_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
 	default:
 		panic(fmt.Sprintf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType()))
