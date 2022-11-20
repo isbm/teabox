@@ -15,7 +15,7 @@ var INIT_SET_PROGRESS string = "init.progress"
 //
 //   init.progress.inc::
 
-var INIT_INC_PROGRESS string = "init.progress.inc"
+var INIT_INC_PROGRESS string = "init.progress.next"
 
 // Allocate progress increment steps. Basically, 100 divided by
 // the number of these steps. Example allocating a step by 33%:
@@ -64,7 +64,7 @@ the module performance runtime.
 // # Common (lander)
 // -------------------
 //
-// Set event status of an event. Example usage:
+// Set event status of an event (the label above the progress bar). Example usage:
 //
 //   common.progress.event::"Godzilla happens"
 
@@ -96,14 +96,51 @@ var COMMON_PROGRESS_SET string = "common.progress.set"
 // When a command is called, STDOUT is piped through. Each line which starts with "STATUS>"
 // will be taken as a event message and will update eventbar.
 
-var COMMON_PROGRESS_LOOKUP_PREFIX string = "common.progress.lookup.prefix"
+var COMMON_LOOKUP_PREFIX string = "common.lookup.prefix"
 
 // Set lookup regex. This is a POSIX (!) regular expression, which acts as same as
 // "progress-lookup-prefix", except it is a regex. Example usage:
 //
 //   common.progress.lookup.regex::"^STATUS*"
 
-var COMMON_PROGRESS_LOOKUP_REGEX string = "common.progress.lookup.regex"
+var COMMON_LOOKUP_REGEX string = "common.lookup.regex"
+
+// Add a todo list item in the list. Each list item needs to have an ID, therefore key/value
+// format should be used. Ordering is stil preserved in the same order as API were called. Example usage:
+//
+//	 common.list.add::{foo}"Foo should happen"
+
+var COMMON_LIST_ADD_ITEM string = "common.list.add"
+
+// Complete an item by passing its ID. Example usage:
+//
+//	 common.list.complete::foo
+
+var COMMON_LIST_COMPLETE_ITEM string = "common.list.complete"
+
+// Reset all the list to the "todo" state. Example usage:
+//
+//	 common.list.reset::
+
+var COMMON_LIST_RESET string = "common.list.reset"
+
+// Add a text to the existing text in common info area. Example usage:
+//
+//	 common.info.add::"This is an undocumented feature in Windows."
+
+var COMMON_INFO_ADD string = "common.info.add"
+
+// Set a text to the common info area. Example usage:
+//
+//	 common.info.set::"ATM cell has no roaming feature turned on, notebooks can't connect. Yes, this is called a design limitation!"
+
+var COMMON_INFO_SET string = "common.info.set"
+
+// Set a title. Example usage:
+//
+//	 common.title::"Big To Little Endian Conversion Error"
+
+var COMMON_TITLE string = "common.title"
 
 /*
 Form is the main UI to collect all the parameters in order to launch the module command.
