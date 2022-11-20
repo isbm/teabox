@@ -16,7 +16,7 @@ function load_form() {
     do
         sleep 0.1
 	    api init.status "Now Loading $stat..."
-	    api init.progress.inc
+	    api init.progress.next
 
 	    # Reset fields
 	    api field.set.by-ord "{0}/etc|/usr/local/etc|/opt/etc"
