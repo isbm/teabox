@@ -35,6 +35,9 @@ func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule, parent *TeaboxArgsForm) *Te
 	case "logger":
 		tfp.landingPage = teawidgets.NewTeaLoggerWindowLander()
 		tfp.AddPanel(teawidgets.LANDING_WINDOW_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
+	case "progress":
+		tfp.landingPage = teawidgets.NewTeaProgressWindowLander()
+		tfp.AddPanel(teawidgets.LANDING_WINDOW_PROGRESS, tfp.landingPage.(crtview.Primitive), true, false)
 	default:
 		panic(fmt.Sprintf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType()))
 	}
@@ -69,9 +72,10 @@ func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize b
 	tfp.Panels.AddPanel(name, item, resize, visible)
 }
 
+// StartListener of Unix socket, and add handlers for it.
 func (tfp *TeaFormsPanel) StartListener() error {
-	// TODO: Add widget update handler action. Currently a noop dummy
-	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {})
+	tfp.landingPage.Reset()
+	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
 
 	// Run the Unix server instance
 	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(tfp.moduleConfig.GetCallbackPath()); err != nil {
@@ -88,6 +92,8 @@ func (tfp *TeaFormsPanel) ShowLandingWindow(id string) error {
 	switch id {
 	case "logger":
 		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	case "progress":
+		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_PROGRESS)
 	default:
 		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
 	}

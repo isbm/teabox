@@ -21,6 +21,8 @@ type TeaLoggerWindowLander struct {
 	statusBar *crtview.TextView
 	titleBar  *crtview.TextView
 	w         *crtview.TextView
+
+	*teaCommonBaseWindowLander
 	*crtview.Flex
 }
 
@@ -90,14 +92,6 @@ func (tsw *TeaLoggerWindowLander) GetWindow() *crtview.TextView {
 
 func (tsw *TeaLoggerWindowLander) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) {
 	return tsw.action
-}
-
-func (tsw *TeaLoggerWindowLander) StopListener() error {
-	// Stop Unix socket
-	if teabox.GetTeaboxApp().GetCallbackServer().IsRunning() {
-		return teabox.GetTeaboxApp().GetCallbackServer().Stop()
-	}
-	return nil
 }
 
 func (tsw *TeaLoggerWindowLander) Action(cmdpath string, cmdargs ...string) error {
