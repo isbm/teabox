@@ -260,6 +260,9 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
 		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle()).SetStaticFlags(cmd)
+		f.SetFocusedBorderStyle(crtview.BorderSingle)
+		f.SetBorderColor(teaboxlib.FORM_BORDER)
+		f.SetBorderColorFocused(teaboxlib.FORM_BORDER_SELECTED)
 
 		// Update relative path to its absolute
 		if !strings.HasPrefix(cmd.GetCommandPath(), "/") {
