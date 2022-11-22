@@ -242,11 +242,13 @@ func (pl *TeaProgressWindowLander) init() *TeaProgressWindowLander {
 		case teaboxlib.COMMON_INFO_ADD:
 			pl.generalInfo.SetText(pl.generalInfo.GetText(true) + call.GetString())
 
+		// Misc
 		case teaboxlib.COMMON_INFO_SET:
 			pl.generalInfo.SetText(call.GetString())
-
 		case teaboxlib.COMMON_TITLE:
 			pl.title.SetText(call.GetString())
+		case teaboxlib.COMMON_RESET:
+			pl.Reset()
 		}
 
 		teabox.GetTeaboxApp().Draw()
