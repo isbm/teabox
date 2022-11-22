@@ -18,7 +18,7 @@ function setup() {
 	api common.list.add "{enjoy}Enjoy!"
 
 	# Set progress
-	api common.progress.set 0
+	api common.progress.set 0 int
 	api common.progress.allocate 10 int
 }
 
@@ -50,8 +50,6 @@ function run() {
 		api common.info.set "[lime]Enjoy! [yellow]Enjoy! [white]Enjoy!"
 		sleep 0.1
 	done
-
-	api common.progress.next
 }
 
 # Main
