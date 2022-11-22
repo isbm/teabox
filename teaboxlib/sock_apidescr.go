@@ -142,6 +142,12 @@ var COMMON_INFO_SET string = "common.info.set"
 
 var COMMON_TITLE string = "common.title"
 
+// Reset everything on the progress lander page. Example usage:
+//
+//   common.reset::
+
+var COMMON_RESET string = "common.reset"
+
 /*
 Form is the main UI to collect all the parameters in order to launch the module command.
 
