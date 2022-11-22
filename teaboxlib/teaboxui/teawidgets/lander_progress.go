@@ -43,6 +43,11 @@ func (lcl *landerChecklist) ClearItems() *landerChecklist {
 	lcl.drawables = []*crtview.Flex{}
 	lcl.Flex.ClearItems()
 
+	// Removal all the items creates a black hole in the universe.
+	filler := crtview.NewTextView()
+	filler.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
+	lcl.Flex.AddItem(filler, 0, 1, false)
+
 	return lcl
 }
 
