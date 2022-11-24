@@ -16,16 +16,18 @@ Form Logger is a text view that is handling \r symbols.
 It is used to show the output of a called script.
 */
 
-type TeaSTDOUTWindow struct {
+type TeaLoggerWindowLander struct {
 	action    func(call *teaboxlib.TeaboxAPICall)
 	statusBar *crtview.TextView
 	titleBar  *crtview.TextView
 	w         *crtview.TextView
+
+	*teaCommonBaseWindowLander
 	*crtview.Flex
 }
 
-func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
-	c := &TeaSTDOUTWindow{
+func NewTeaLoggerWindowLander() *TeaLoggerWindowLander {
+	c := &TeaLoggerWindowLander{
 		Flex: crtview.NewFlex(),
 	}
 
@@ -73,34 +75,26 @@ func NewTeaSTDOUTWindow() *TeaSTDOUTWindow {
 }
 
 // Reset all content to the initial values
-func (tsw *TeaSTDOUTWindow) Reset() {
+func (tsw *TeaLoggerWindowLander) Reset() {
 	tsw.statusBar.SetText("")
 	tsw.titleBar.SetText("")
 	tsw.w.SetText("")
 }
 
-func (tsw *TeaSTDOUTWindow) AsWidgetPrimitive() crtview.Primitive {
+func (tsw *TeaLoggerWindowLander) AsWidgetPrimitive() crtview.Primitive {
 	var w TeaboxLandingWindow = tsw
 	return w.(crtview.Primitive)
 }
 
-func (tsw *TeaSTDOUTWindow) GetWindow() *crtview.TextView {
+func (tsw *TeaLoggerWindowLander) GetWindow() *crtview.TextView {
 	return tsw.w
 }
 
-func (tsw *TeaSTDOUTWindow) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) {
+func (tsw *TeaLoggerWindowLander) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) {
 	return tsw.action
 }
 
-func (tsw *TeaSTDOUTWindow) StopListener() error {
-	// Stop Unix socket
-	if teabox.GetTeaboxApp().GetCallbackServer().IsRunning() {
-		return teabox.GetTeaboxApp().GetCallbackServer().Stop()
-	}
-	return nil
-}
-
-func (tsw *TeaSTDOUTWindow) Action(cmdpath string, cmdargs ...string) error {
+func (tsw *TeaLoggerWindowLander) Action(cmdpath string, cmdargs ...string) error {
 	cmd := exec.Command(cmdpath, cmdargs...)
 	cmd.Stdout = tsw.GetWindow()
 	cmd.Stderr = tsw.GetWindow()

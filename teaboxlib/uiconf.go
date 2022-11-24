@@ -24,3 +24,11 @@ var FORM_BUTTON_BACKGROUND = EGAColorBlack
 var FORM_BUTTON_BACKGROUND_SELECTED = EGAColorWhite
 var FORM_BUTTON_TEXT = EGAColorWhite
 var FORM_BUTTON_TEXT_SELECTED = EGAColorBlack
+
+var MENU_BORDER_SELECTED = EGAColorBrightWhite
+var MENU_BORDER = EGAColorBrightGreen
+var MENU_ITEM_SELECTED = EGAColorLightGray
+var MENU_ITEM = EGAColorDarkGray
+
+var FORM_BORDER_SELECTED = EGAColorBrightWhite
+var FORM_BORDER = EGAColorBrightGreen

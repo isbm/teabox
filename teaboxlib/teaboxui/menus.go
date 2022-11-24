@@ -11,8 +11,10 @@ import (
 )
 
 type TeaboxMenu struct {
-	items  *crtview.List
-	layers *crtview.Panels
+	lastSubmenu  string
+	items        *crtview.List
+	submenuItems map[string]*crtview.List
+	layers       *crtview.Panels
 
 	onSelectecFunction func(i int, li *crtview.ListItem)
 	TeaboxBaseWindow
@@ -20,6 +22,7 @@ type TeaboxMenu struct {
 
 func NewTeaboxMenu() *TeaboxMenu {
 	tm := new(TeaboxMenu)
+	tm.submenuItems = map[string]*crtview.List{}
 	tm.Init()
 
 	return tm
@@ -32,33 +35,63 @@ func (tm *TeaboxMenu) SetOnSelectedFunc(f func(i int, li *crtview.ListItem)) *Te
 
 func (tm *TeaboxMenu) ShowSubmenu(id string) {
 	tm.layers.SetCurrentPanel(id)
+	if id == "mainmenu" {
+		id = ""
+	}
+	tm.lastSubmenu = id
+}
+
+func (tm *TeaboxMenu) FocusCurrentMenu() {
+	state := false
+	if tm.lastSubmenu != "" {
+		if submenu, found := tm.submenuItems[tm.lastSubmenu]; found {
+			teabox.GetTeaboxApp().SetFocus(submenu)
+			state = true
+		}
+	}
+
+	if !state {
+		teabox.GetTeaboxApp().SetFocus(tm.items)
+	}
 }
 
 func (tm *TeaboxMenu) GetWidget() crtview.Primitive {
 	return tm.layers
 }
 
-func (tm *TeaboxMenu) makeSubmenu(mod teaboxlib.TeaConfComponent) {
-	list := crtview.NewList()
-	list.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
-	list.ShowSecondaryText(false)
-	list.SetBorder(true)
-	list.SetTitle(mod.GetTitle())
-	list.SetTitleAlign(crtview.AlignRight)
+// Creates a list for the menu
+func (tm *TeaboxMenu) createMenu(title string) *crtview.List {
+	menuStub := crtview.NewList()
+	menuStub.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
+	menuStub.ShowSecondaryText(false)
+	menuStub.SetBorder(true)
+	menuStub.SetFocusedBorderStyle(crtview.BorderSingle)
+	menuStub.SetBorderColorFocused(teaboxlib.MENU_BORDER_SELECTED)
+	menuStub.SetBorderColor(teaboxlib.MENU_BORDER)
+	menuStub.SetSelectedBackgroundColor(teaboxlib.MENU_ITEM_SELECTED)
+	menuStub.SetSelectedTextColor(teaboxlib.MENU_ITEM)
+	menuStub.SetDisabledItemTextColor(teaboxlib.MENU_BORDER)
+	menuStub.SetTitle(title)
+	menuStub.SetTitleAlign(crtview.AlignRight)
 
+	return menuStub
+}
+
+func (tm *TeaboxMenu) makeSubmenu(mod teaboxlib.TeaConfComponent) {
+	menu := tm.createMenu(mod.GetTitle())
 	for _, c := range mod.GetChildren() {
-		list.AddItem(crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", c.GetTitle())))
+		menu.AddItem(crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", c.GetTitle())))
 	}
 
 	// Spacer
-	list.AddItem(crtview.NewListItem(strings.Repeat(teaboxlib.LABEL_SEP, teaboxlib.MAIN_MENU_WIDTH-2)))
-	list.SetItemEnabled(list.GetItemCount()-1, false)
+	menu.AddItem(crtview.NewListItem(strings.Repeat(teaboxlib.LABEL_SEP, teaboxlib.MAIN_MENU_WIDTH-2)))
+	menu.SetItemEnabled(menu.GetItemCount()-1, false)
 
 	// Return item
-	list.AddItem(crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", teaboxlib.LABEL_BACK)))
+	menu.AddItem(crtview.NewListItem(fmt.Sprintf("%-"+strconv.Itoa(teaboxlib.MAIN_MENU_WIDTH-2)+"s", teaboxlib.LABEL_BACK)))
 
 	// Return hook
-	list.SetSelectedFunc(func(i int, li *crtview.ListItem) {
+	menu.SetSelectedFunc(func(i int, li *crtview.ListItem) {
 		if strings.TrimSpace(li.GetMainText()) == teaboxlib.LABEL_BACK {
 			tm.ShowSubmenu("mainmenu")
 		} else {
@@ -66,19 +99,14 @@ func (tm *TeaboxMenu) makeSubmenu(mod teaboxlib.TeaConfComponent) {
 		}
 	})
 
-	tm.layers.AddPanel(mod.GetTitle(), list, true, false)
+	tm.submenuItems[mod.GetTitle()] = menu
+	tm.layers.AddPanel(mod.GetTitle(), menu, true, false)
 }
 
 // Init the ui
 func (tm *TeaboxMenu) Init() TeaboxWindow {
 	tm.layers = crtview.NewPanels()
-
-	tm.items = crtview.NewList()
-	tm.items.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
-	tm.items.ShowSecondaryText(false)
-	tm.items.SetBorder(true)
-	tm.items.SetTitle("Modules")
-	tm.items.SetTitleAlign(crtview.AlignRight)
+	tm.items = tm.createMenu("Modules")
 
 	// Put a hook on exit
 	tm.items.SetSelectedFunc(func(i int, li *crtview.ListItem) {

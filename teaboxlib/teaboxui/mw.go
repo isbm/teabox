@@ -139,7 +139,7 @@ func NewTeaboxMainWindow() *TeaboxMainWindow {
 		case tcell.KeyRight:
 			teabox.GetTeaboxApp().SetFocus(tmw.formWindow.GetWidget())
 		case tcell.KeyLeft:
-			teabox.GetTeaboxApp().SetFocus(tmw.menu.items)
+			tmw.menu.FocusCurrentMenu()
 		default:
 			//fmt.Println(event.Key())
 		}

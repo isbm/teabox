@@ -104,7 +104,7 @@ func (tc *TeaConf) initConfig() error {
 					m.SetCondition(c.Root().Raw()["conditions"]).
 						SetCommands(c.Root().Raw()["commands"]).
 						SetCallbackPath(tc.callbackSocketPath).
-						SetLandingPageType(c.Root().String("langing", "")).
+						SetLandingPageType(c.Root().String("landing", "")).
 						SetSetupCommand(c.Root().String("setup", ""))
 				}
 

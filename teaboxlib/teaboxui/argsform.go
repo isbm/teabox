@@ -33,8 +33,11 @@ func NewTeaFormsPanel(conf *teaboxlib.TeaConfModule, parent *TeaboxArgsForm) *Te
 	// Init landing
 	switch tfp.moduleConfig.GetLandingPageType() {
 	case "logger":
-		tfp.landingPage = teawidgets.NewTeaSTDOUTWindow()
+		tfp.landingPage = teawidgets.NewTeaLoggerWindowLander()
 		tfp.AddPanel(teawidgets.LANDING_WINDOW_LOGGER, tfp.landingPage.(crtview.Primitive), true, false)
+	case "progress":
+		tfp.landingPage = teawidgets.NewTeaProgressWindowLander()
+		tfp.AddPanel(teawidgets.LANDING_WINDOW_PROGRESS, tfp.landingPage.(crtview.Primitive), true, false)
 	default:
 		panic(fmt.Sprintf("Unfortauntely, type \"%s\" of landing page is not implemented yet\n", tfp.moduleConfig.GetLandingPageType()))
 	}
@@ -69,9 +72,10 @@ func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize b
 	tfp.Panels.AddPanel(name, item, resize, visible)
 }
 
+// StartListener of Unix socket, and add handlers for it.
 func (tfp *TeaFormsPanel) StartListener() error {
-	// TODO: Add widget update handler action. Currently a noop dummy
-	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(func(call *teaboxlib.TeaboxAPICall) {})
+	tfp.landingPage.Reset()
+	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
 
 	// Run the Unix server instance
 	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(tfp.moduleConfig.GetCallbackPath()); err != nil {
@@ -88,6 +92,8 @@ func (tfp *TeaFormsPanel) ShowLandingWindow(id string) error {
 	switch id {
 	case "logger":
 		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
+	case "progress":
+		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_PROGRESS)
 	default:
 		tfp.SetCurrentPanel(teawidgets.LANDING_WINDOW_LOGGER)
 	}
@@ -158,11 +164,9 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 	formsPanel, ok := taf.allModulesForms.GetPanelByName(id).(*TeaFormsPanel)
 	if ok {
 		if err := formsPanel.StartListener(); err != nil {
-			teabox.GetTeaboxApp().GetScreen().Clear()
-			taf.GetLogger().Panic(err)
+			teabox.GetTeaboxApp().Stop("Unable start listener: " + err.Error())
 		}
 
-		// TODO: Add a Unix socket hook for preloader and values to the form
 		/*
 			1. Insert an action that will receive RPC calls to update progress bar and status bar (what's going on during preload)
 			   This action will update currently visible loader window.
@@ -177,10 +181,9 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 			taf.allModulesForms.SetCurrentPanel(teawidgets.LOAD_WINDOW_COMMON)
 			loader := taf.allModulesForms.GetPanelByName(teawidgets.LOAD_WINDOW_COMMON).(*teawidgets.TeaboxArgsLoadingWindow)
 			loader.SetAfterLoadAction(func() {
-				// TODO: Hook-up Unix receiver with the pre-loader
-
 				// Load finished, so show the main form
 				taf.allModulesForms.SetCurrentPanel(id)
+				teabox.GetTeaboxApp().SetFocus(taf.GetWidget())
 				teabox.GetTeaboxApp().Draw()
 			})
 
@@ -205,6 +208,7 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 		} else {
 			// No loader specified, show the form "as is" directly
 			taf.allModulesForms.SetCurrentPanel(id)
+			teabox.GetTeaboxApp().SetFocus(taf.GetWidget())
 		}
 	} else {
 		panic(fmt.Sprintf("Panel %s was not found", id))
@@ -251,11 +255,13 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	}
 
 	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
-	// TODO: Define action for updating widgets inside the form
 	formPanel := NewTeaFormsPanel(mod, taf)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!
 		f := formPanel.AddForm(mod.GetTitle(), cmd.GetTitle()).SetStaticFlags(cmd)
+		f.SetFocusedBorderStyle(crtview.BorderSingle)
+		f.SetBorderColor(teaboxlib.FORM_BORDER)
+		f.SetBorderColorFocused(teaboxlib.FORM_BORDER_SELECTED)
 
 		// Update relative path to its absolute
 		if !strings.HasPrefix(cmd.GetCommandPath(), "/") {
