@@ -255,7 +255,6 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 	}
 
 	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
-	// TODO: Define action for updating widgets inside the form
 	formPanel := NewTeaFormsPanel(mod, taf)
 
 	for _, cmd := range mod.GetCommands() { // One form can have many tabs!

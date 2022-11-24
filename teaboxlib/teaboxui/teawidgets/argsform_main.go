@@ -2,6 +2,7 @@ package teawidgets
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -172,7 +173,9 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 			tmw.AddInputField(a)
 		case "toggle":
 			tmw.AddCheckBox(a)
-		case "silent": // TODO: should be deprecated from the specs
+		default:
+			fmt.Printf("Module config error: Unknown widget definition \"%s\" for command argument \"%s\" at %s\n", a.GetWidgetType(), cmd.GetTitle(), cmd.GetCommandPath())
+			os.Exit(1)
 		}
 	}
 }
