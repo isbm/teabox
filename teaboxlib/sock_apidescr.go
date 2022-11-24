@@ -98,6 +98,13 @@ var COMMON_PROGRESS_SET string = "common.progress.set"
 
 var COMMON_LOOKUP_PREFIX string = "common.lookup.prefix"
 
+// Set lookup globbing regex (Unix). This is a Unix regular expression, which acts as same as
+// shell filename matching (the rules applies exactly the same). Example usage:
+//
+//   common.progress.lookup.glob::"?ord*"
+
+var COMMON_LOOKUP_GLOB string = "common.lookup.glob"
+
 // Set lookup regex. This is a POSIX (!) regular expression, which acts as same as
 // "progress-lookup-prefix", except it is a regex. Example usage:
 //

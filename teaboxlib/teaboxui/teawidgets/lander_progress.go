@@ -1,8 +1,11 @@
 package teawidgets
 
 import (
+	"bufio"
 	"fmt"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -132,6 +135,7 @@ type TeaProgressWindowLander struct {
 	steps        int
 	stepsOffset  int
 	lookupPrefix string
+	lookupGlob   string
 	lookupRegex  string
 
 	checklist   *landerChecklist
@@ -235,6 +239,8 @@ func (pl *TeaProgressWindowLander) init() *TeaProgressWindowLander {
 
 		case teaboxlib.COMMON_LOOKUP_PREFIX:
 			pl.lookupPrefix = call.GetString()
+		case teaboxlib.COMMON_LOOKUP_GLOB:
+			pl.lookupGlob = call.GetString()
 		case teaboxlib.COMMON_LOOKUP_REGEX:
 			pl.lookupRegex = call.GetString()
 
@@ -263,10 +269,34 @@ func (pl *TeaProgressWindowLander) init() *TeaProgressWindowLander {
 }
 
 func (pl *TeaProgressWindowLander) Action(cmdpath string, cmdargs ...string) error {
-	// TODO: Watch stdout and update the UI on prefix or regex
 	cmd := exec.Command(cmdpath, cmdargs...)
-	if err := cmd.Run(); err != nil {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf(fmt.Sprintf("Error: cannot initialise communication for the %s: %s", cmdpath, err.Error()))
+	}
+	if err := cmd.Start(); err != nil {
 		return fmt.Errorf(fmt.Sprintf("Error: command \"%s %s\" quit as %s", cmdpath, strings.Join(cmdargs, " "), err.Error()))
+	}
+
+	// Streaming the STDOUT
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		data := scanner.Text()
+		if pl.lookupPrefix != "" && strings.HasPrefix(data, pl.lookupPrefix) {
+			pl.eventBar.SetText(data)
+		} else if pl.lookupGlob != "" {
+			if m, _ := filepath.Match(pl.lookupGlob, data); m {
+				pl.eventBar.SetText(data)
+			}
+		} else if pl.lookupRegex != "" {
+			if m, _ := regexp.Match(pl.lookupRegex, []byte(data)); m {
+				pl.eventBar.SetText(data)
+			}
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf(fmt.Sprintf("Error running %s: %s", cmdpath, err.Error()))
 	}
 
 	teabox.GetTeaboxApp().Draw()
@@ -292,7 +322,7 @@ func (pl *TeaProgressWindowLander) Reset() {
 	pl.steps = 0
 	pl.stepsOffset = 0
 	pl.lookupPrefix = ""
-	pl.lookupRegex = ""
+	pl.lookupGlob = ""
 
 	pl.title.SetText("Welcome!")
 	pl.eventBar.SetText("")
