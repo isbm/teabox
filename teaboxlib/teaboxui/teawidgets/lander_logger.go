@@ -45,6 +45,7 @@ func NewTeaLoggerWindowLander() *TeaLoggerWindowLander {
 	c.w.SetBorder(false)
 	c.w.SetBorderPadding(1, 1, 2, 2)
 	c.w.SetBackgroundColor(tcell.ColorLightGray)
+	c.w.SetDynamicColors(true)
 	c.w.SetTextColor(tcell.ColorBlack)
 	c.w.SetSkipCursorReturn(true)
 	c.w.SetChangedFunc(func() {
