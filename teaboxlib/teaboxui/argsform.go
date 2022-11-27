@@ -302,6 +302,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 				})
 				taf.workspace.ShowPanel(panelPtr)
 				teabox.GetTeaboxApp().SetFocus(alert.GetButton(0)) // Focus can be set only if Primitive is visible
+				teabox.GetTeaboxApp().Draw()
 			}()
 		})
 
