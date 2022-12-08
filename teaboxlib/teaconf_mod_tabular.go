@@ -30,6 +30,22 @@ func NewTeaConfTabularRow(data []interface{}, valueIdx int, valueHidden bool) *T
 	return r
 }
 
+// GetLabels returns you the row labels for cell building
+func (r *TeaConfTabularRow) GetLabels() []string {
+	return r.labels
+}
+
+// GetValue returns you the value of the row. If this is a header,
+// this returns you an index of value-carrier column.
+func (r *TeaConfTabularRow) GetValue() interface{} {
+	return r.value
+}
+
+// IsValueHidden returns a bool, which indicates if the value column is hidden.
+func (r *TeaConfTabularRow) IsValueHidden() bool {
+	return r.valueHidden
+}
+
 type TeaConfTabularData struct {
 	header []string
 	rows   [][]*TeaConfTabularRow
