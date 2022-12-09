@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
+	"github.com/isbm/crtview/crtwin/crtforms"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
@@ -173,11 +174,49 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 			tmw.AddInputField(a)
 		case "toggle":
 			tmw.AddCheckBox(a)
+		case "tabular":
+			tmw.AddTabularField(a)
 		default:
 			fmt.Printf("Module config error: Unknown widget definition \"%s\" for command argument \"%s\" at %s\n", a.GetWidgetType(), cmd.GetTitle(), cmd.GetCommandPath())
 			os.Exit(1)
 		}
 	}
+}
+
+// AddTabularFiled adds a list of tabular data. This is a complex field that has multiple columns.
+func (tmw *TeaboxArgsMainWindow) AddTabularField(arg *teaboxlib.TeaConfModArg) error {
+	if len(arg.GetOptions()) == 0 {
+		return fmt.Errorf("No tabular data found for the field %s", arg.GetArgName())
+	}
+
+	rows := [][]string{}
+
+	for _, rowData := range arg.GetOptions()[1:] {
+		if rowData.GetType() == "tabular:row" {
+			rows = append(rows, rowData.GetValue().(*teaboxlib.TeaConfTabularRow).GetLabels())
+		}
+	}
+
+	tabular := crtforms.NewFormTabularChoice(arg.GetWidgetLabel(), arg.GetOptions()[0].GetValue().(*teaboxlib.TeaConfTabularRow).GetLabels(),
+		rows, true, arg.GetAttrs().KeywordValueAsInts("hidden")...).
+		SetFieldHeight(arg.GetAttrs().KeywordValueAsInt("height")).
+		SetMultiselect(arg.GetAttrs().HasOption("multiselect")).
+		SetHasSearch(arg.GetAttrs().HasOption("search")).
+		SetValueColumn(arg.GetAttrs().KeywordValueAsInt("value")).
+		SetExpandingColumn(arg.GetAttrs().KeywordValueAsInt("expand"))
+	tabular.SetFocusedBorderStyle(crtview.BorderSingle)
+	tabular.SetTitleWhitespace(true)
+	tabular.SetBorderColorFocused(tmw.GetAttributes().FieldBackgroundColorFocused)
+	tabular.SetSelectedFunc(func(row, column int) {
+		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), tabular.GetValueAt(row-1))
+	})
+	tabular.Select(1, 1)
+	tmw.Form.AddFormItem(tabular)
+
+	// Pre-select first value
+	tmw.AddArgument(tmw.GetId(), arg.GetArgName(), tabular.GetValueAt(0))
+
+	return nil
 }
 
 func (tmw *TeaboxArgsMainWindow) AddDropDownSimple(arg *teaboxlib.TeaConfModArg) error {

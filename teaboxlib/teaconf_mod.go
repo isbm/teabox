@@ -122,6 +122,9 @@ type TeaConfModArg struct {
 	// Label on the form for this widget
 	label string
 
+	// Attributes of the argument
+	attrs *TeaConfArgAttributes
+
 	// Preset options. They can be also loaded dynamically via socket
 	options []*TeaConfCmdOption
 
@@ -132,6 +135,8 @@ func NewTeaConfModArg(args map[interface{}]interface{}) *TeaConfModArg {
 	a := new(TeaConfModArg)
 	a.options = []*TeaConfCmdOption{}
 
+	optbuf := []interface{}{}
+
 	for wn, wd := range args {
 		switch wn.(string) {
 		case "type":
@@ -139,12 +144,23 @@ func NewTeaConfModArg(args map[interface{}]interface{}) *TeaConfModArg {
 		case "label":
 			a.label = wd.(string)
 		case "options":
-			for _, opt := range wd.([]interface{}) {
-				a.options = append(a.options, NewTeaConfCmdOption(opt))
-			}
+			// Postpone opts parse
+			optbuf = wd.([]interface{})
 		case "name":
 			a.name = wd.(string) // Add as-is. If it is with double-dash, then it is so.
+		case "attributes":
+			attrs, _ := wd.([]interface{}) // Avoid explicit cast crash. If syntax is wrong, then just skip it by passing nil.
+			a.attrs = NewTeaConfArgAttributes(attrs)
 		}
+	}
+
+	// Parse opts
+	if a.argtype != "tabular" {
+		for _, opt := range optbuf {
+			a.options = append(a.options, NewTeaConfCmdOption(opt))
+		}
+	} else {
+		a.options = NewTeaConfTabularData(optbuf).MakeOptionsData()
 	}
 
 	if a.argtype == "" {
@@ -174,6 +190,11 @@ func (a *TeaConfModArg) GetWidgetType() string {
 
 func (a *TeaConfModArg) GetWidgetLabel() string {
 	return a.label
+}
+
+// GetAttrs returns argument extra attributes
+func (a *TeaConfModArg) GetAttrs() *TeaConfArgAttributes {
+	return a.attrs
 }
 
 func (a *TeaConfModArg) GetOptions() []*TeaConfCmdOption {

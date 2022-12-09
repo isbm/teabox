@@ -21,7 +21,7 @@ function run() {
 	# Set the status bar
 	api logger.status "Iteration $i out of $TIMES"
 
-	sleep 1
+	sleep 0.1
     done
 }
 
