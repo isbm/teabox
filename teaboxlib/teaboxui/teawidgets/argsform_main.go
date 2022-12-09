@@ -207,6 +207,9 @@ func (tmw *TeaboxArgsMainWindow) AddTabularField(arg *teaboxlib.TeaConfModArg) e
 	tabular.SetFocusedBorderStyle(crtview.BorderSingle)
 	tabular.SetTitleWhitespace(true)
 	tabular.SetBorderColorFocused(tmw.GetAttributes().FieldBackgroundColorFocused)
+	tabular.SetSelectedFunc(func(row, column int) {
+		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), tabular.GetValueAt(row-1))
+	})
 
 	tmw.Form.AddFormItem(tabular)
 
