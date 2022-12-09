@@ -160,7 +160,7 @@ func NewTeaConfModArg(args map[interface{}]interface{}) *TeaConfModArg {
 			a.options = append(a.options, NewTeaConfCmdOption(opt))
 		}
 	} else {
-		a.options = NewTeaConfTabularData(optbuf).Make()
+		a.options = NewTeaConfTabularData(optbuf).MakeOptionsData()
 	}
 
 	if a.argtype == "" {

@@ -2,7 +2,6 @@ package teaboxlib
 
 import (
 	"fmt"
-	"strings"
 
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 )
@@ -12,16 +11,11 @@ Tabular data definition and parser.
 */
 
 type TeaConfTabularRow struct {
-	valueHidden bool
-	labels      []string
-	value       interface{}
+	labels []string
 }
 
-func NewTeaConfTabularRow(data []interface{}, valueIdx int, valueHidden bool) *TeaConfTabularRow {
-	r := &TeaConfTabularRow{
-		value:       data[valueIdx],
-		valueHidden: valueHidden,
-	}
+func NewTeaConfTabularRow(data []interface{}) *TeaConfTabularRow {
+	r := &TeaConfTabularRow{}
 
 	for _, e := range data {
 		r.labels = append(r.labels, fmt.Sprintf("%v", e))
@@ -33,17 +27,6 @@ func NewTeaConfTabularRow(data []interface{}, valueIdx int, valueHidden bool) *T
 // GetLabels returns you the row labels for cell building
 func (r *TeaConfTabularRow) GetLabels() []string {
 	return r.labels
-}
-
-// GetValue returns you the value of the row. If this is a header,
-// this returns you an index of value-carrier column.
-func (r *TeaConfTabularRow) GetValue() interface{} {
-	return r.value
-}
-
-// IsValueHidden returns a bool, which indicates if the value column is hidden.
-func (r *TeaConfTabularRow) IsValueHidden() bool {
-	return r.valueHidden
 }
 
 type TeaConfTabularData struct {
@@ -62,7 +45,7 @@ func NewTeaConfTabularData(data []interface{}) *TeaConfTabularData {
 	}
 }
 
-func (tcd *TeaConfTabularData) Make() []*TeaConfCmdOption {
+func (tcd *TeaConfTabularData) MakeOptionsData() []*TeaConfCmdOption {
 	options := []*TeaConfCmdOption{}
 
 	// Bail-out if there is no data
@@ -78,21 +61,7 @@ func (tcd *TeaConfTabularData) Make() []*TeaConfCmdOption {
 	}
 
 	// Find which field is a response value and setup its attrs
-	labels, attributes, index := tcd.getHeaderAttributes(header)
-	headerRow := &TeaConfTabularRow{
-		labels: labels,
-		value:  -1,
-	}
-
-	for _, attr := range attributes {
-		switch attr {
-		case "hidden":
-			headerRow.valueHidden = true
-		case "value":
-			headerRow.value = index
-		}
-	}
-
+	headerRow := &TeaConfTabularRow{labels: tcd.getHeaderLabels(header)}
 	options = append(options, &TeaConfCmdOption{
 		label:      "",
 		optionType: "tabular:header",
@@ -109,37 +78,20 @@ func (tcd *TeaConfTabularData) Make() []*TeaConfCmdOption {
 		options = append(options, &TeaConfCmdOption{
 			label:      "",
 			optionType: "tabular:row",
-			value:      NewTeaConfTabularRow(row, headerRow.value.(int), headerRow.valueHidden),
+			value:      NewTeaConfTabularRow(row),
 		})
 	}
 
 	return options
 }
 
-// Get attributes for the header: return clean labels, and attributes
-// Field attributes are:
-//
-//   - value
-//   - hidden
-//
-// They are written in any order, like so:
-//
-//	value:hidden:"Whatever label it is"
-func (tcd *TeaConfTabularData) getHeaderAttributes(header []interface{}) ([]string, []string, int) {
+// Get header labels
+func (tcd *TeaConfTabularData) getHeaderLabels(header []interface{}) []string {
 	labels := []string{}
-	attrs := []string{}
-	idx := -1
 
-	for i, r := range header {
-		label := r.(string)
-		if strings.Contains(label, ":") && idx < 0 {
-			attrs = strings.SplitN(label, ":", 3)
-			label = attrs[(len(attrs) - 1)]
-			attrs = attrs[:(len(attrs) - 1)]
-			idx = i
-		}
-		labels = append(labels, label)
+	for _, r := range header {
+		labels = append(labels, fmt.Sprintf("%v", r))
 	}
 
-	return labels, attrs, idx
+	return labels
 }
