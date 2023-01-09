@@ -10,6 +10,8 @@ import (
 	"gitlab.com/isbm/teabox/teaboxlib/teaboxui"
 )
 
+var VERSION = "0.1"
+
 func main() {
 	if os.Getenv("TERM") != "xterm-256color" {
 		fmt.Println("Terminal should work in 256 color mode.")
