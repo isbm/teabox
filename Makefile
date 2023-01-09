@@ -29,4 +29,4 @@ vendor:
 	go mod vendor
 
 package:
-	go build -a -mod=vendor -ldflags="-s -w" -o teabox ./cmd/*go
+	go build -a -mod=vendor -buildmode=pie -ldflags="-s -w" -o teabox ./cmd/*go
