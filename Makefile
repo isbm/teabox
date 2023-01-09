@@ -27,3 +27,6 @@ clean:
 vendor:
 	go mod tidy
 	go mod vendor
+
+package:
+	go build -a -mod=vendor -ldflags="-s -w" -o teabox ./cmd/*go
