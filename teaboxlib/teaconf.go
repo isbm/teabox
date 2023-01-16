@@ -25,7 +25,6 @@ type TeaConf struct {
 	contentPath        string
 	initConfPath       string
 	callbackSocketPath string
-	globalEnv          map[string]string
 
 	modIndex []TeaConfComponent
 	wzlib_logger.WzLogger
