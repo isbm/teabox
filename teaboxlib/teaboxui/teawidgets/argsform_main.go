@@ -186,7 +186,7 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 // AddTabularFiled adds a list of tabular data. This is a complex field that has multiple columns.
 func (tmw *TeaboxArgsMainWindow) AddTabularField(arg *teaboxlib.TeaConfModArg) error {
 	if len(arg.GetOptions()) == 0 {
-		return fmt.Errorf("No tabular data found for the field %s", arg.GetArgName())
+		return fmt.Errorf("no tabular data found for the field %s", arg.GetArgName())
 	}
 
 	rows := [][]string{}
@@ -227,7 +227,7 @@ func (tmw *TeaboxArgsMainWindow) AddDropDownSimple(arg *teaboxlib.TeaConfModArg)
 		}
 	}
 	if len(opts) == 0 {
-		return fmt.Errorf("List \"%s\" in command \"%s\" of module \"%s\" has no values.", arg.GetWidgetLabel(), tmw.subtitle, tmw.title)
+		return fmt.Errorf("list \"%s\" in command \"%s\" of module \"%s\" has no values", arg.GetWidgetLabel(), tmw.subtitle, tmw.title)
 	}
 
 	tmw.Form.AddDropDownSimple(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
@@ -261,7 +261,7 @@ func (tmw *TeaboxArgsMainWindow) AddInputField(arg *teaboxlib.TeaConfModArg) err
 
 func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error {
 	if len(arg.GetOptions()) == 0 {
-		return fmt.Errorf("Toggle \"%s\" in command \"%s\" of module \"%s\" should have its default state with at least one option.", arg.GetWidgetLabel(), tmw.title, tmw.subtitle)
+		return fmt.Errorf("toggle \"%s\" in command \"%s\" of module \"%s\" should have its default state with at least one option", arg.GetWidgetLabel(), tmw.title, tmw.subtitle)
 	}
 
 	state, ok := arg.GetOptions()[0].GetValue().(bool) // This is not the *value* but checked/unchecked state
