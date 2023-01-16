@@ -15,10 +15,12 @@ require (
 	github.com/antonfisher/nested-logrus-formatter v1.0.3 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/isbm/textwrap v0.0.0-20190729202254-22edad10bd84 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/sirupsen/logrus v1.5.0 // indirect
 	gitlab.com/tslocum/cbind v0.1.4 // indirect
