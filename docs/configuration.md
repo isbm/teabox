@@ -39,6 +39,10 @@ content: /path/to/the/tree/of/modules
 # Usually /tmp is the safest place. The socket is created only when module
 # is actually called, and is removed after module finished run.
 callback: /tmp/teabox.sock
+
+# Global environment, which will be re-exported with each module call.
+env:
+  PYTHONPATH: /opt/scary/dungeons
 ```
 
 This config also contains branding theme (colors) for the Teabox instance. But it is described
