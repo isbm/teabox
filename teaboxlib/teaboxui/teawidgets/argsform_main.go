@@ -198,7 +198,7 @@ func (tmw *TeaboxArgsMainWindow) AddTabularField(arg *teaboxlib.TeaConfModArg) e
 	}
 
 	tabular := crtforms.NewFormTabularChoice(arg.GetWidgetLabel(), arg.GetOptions()[0].GetValue().(*teaboxlib.TeaConfTabularRow).GetLabels(),
-		rows, true, arg.GetAttrs().KeywordValueAsInts("hidden")...).
+		rows, arg.GetAttrs().HasOption("selector"), arg.GetAttrs().KeywordValueAsInts("hidden")...).
 		SetFieldHeight(arg.GetAttrs().KeywordValueAsInt("height")).
 		SetMultiselect(arg.GetAttrs().HasOption("multiselect")).
 		SetHasSearch(arg.GetAttrs().HasOption("search")).
