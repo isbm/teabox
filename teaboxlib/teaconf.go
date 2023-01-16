@@ -25,6 +25,7 @@ type TeaConf struct {
 	contentPath        string
 	initConfPath       string
 	callbackSocketPath string
+	globalEnv          map[string]string
 
 	modIndex []TeaConfComponent
 	wzlib_logger.WzLogger
@@ -48,6 +49,13 @@ func NewTeaConf(appname string) (*TeaConf, error) {
 	tc.contentPath = cfg.Root().String("content", "")
 	tc.callbackSocketPath = cfg.Root().String("callback", "")
 	tc.initConfPath = path.Join(tc.contentPath, "init.conf")
+
+	environ, exists := cfg.Root().Raw()["env"]
+	if exists {
+		for envKey, envVar := range environ.(map[interface{}]interface{}) {
+			os.Setenv(fmt.Sprintf("%v", envKey), fmt.Sprintf("%v", envVar))
+		}
+	}
 
 	if err := tc.initConfig(); err != nil {
 		return nil, fmt.Errorf("unable to initialise modules: %s", err)
