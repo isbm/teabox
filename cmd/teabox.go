@@ -20,12 +20,18 @@ func main() {
 
 	appname := path.Base(os.Args[0])
 
-	app := teabox.GetTeaboxApp().SetGlobalConfig(teaboxlib.NewTeaConf(appname))
+	conf, err := teaboxlib.NewTeaConf(appname)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	app := teabox.GetTeaboxApp().SetGlobalConfig(conf)
 	app.SetRoot(teaboxui.InitTeaboxMainWindow().GetContent(), true)
 
 	if err := app.Run(); err != nil {
-		panic(err)
+		fmt.Printf("Error: %s\n", err.Error())
+	} else {
+		fmt.Println(teabox.GetTeaboxQuitMessage())
 	}
-
-	fmt.Println(teabox.GetTeaboxQuitMessage())
 }

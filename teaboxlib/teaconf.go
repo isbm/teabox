@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
+	wzlib_utils "github.com/infra-whizz/wzlib/utils"
 	"github.com/isbm/go-nanoconf"
 	"github.com/karrick/godirwalk"
 )
@@ -29,21 +30,30 @@ type TeaConf struct {
 	wzlib_logger.WzLogger
 }
 
-func NewTeaConf(appname string) *TeaConf {
+func NewTeaConf(appname string) (*TeaConf, error) {
 	tc := new(TeaConf)
 	tc.modIndex = []TeaConfComponent{}
 
-	cfg := nanoconf.NewConfig(appname + ".conf")
+	configFileName := fmt.Sprintf("%s.conf", appname)
+	configPath := configFileName
+	if !wzlib_utils.FileExists(configPath) {
+		configPath = path.Join("/etc", configFileName)
+		if !wzlib_utils.FileExists(configPath) {
+			return nil, fmt.Errorf("no config file found as \"./%[1]s\" neither as \"/etc/%[1]s\"", configFileName)
+		}
+	}
+
+	cfg := nanoconf.NewConfig(configPath)
 
 	tc.contentPath = cfg.Root().String("content", "")
 	tc.callbackSocketPath = cfg.Root().String("callback", "")
 	tc.initConfPath = path.Join(tc.contentPath, "init.conf")
 
 	if err := tc.initConfig(); err != nil {
-		panic(fmt.Sprintf("Unable to initialise modules: %s", err))
+		return nil, fmt.Errorf("unable to initialise modules: %s", err)
 	}
 
-	return tc
+	return tc, nil
 }
 
 func (tc *TeaConf) GetTitle() string {
