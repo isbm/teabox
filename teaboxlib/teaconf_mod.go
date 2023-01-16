@@ -62,7 +62,7 @@ func (tco *TeaConfCmdOption) Parse(option interface{}) error {
 		tokens = append([]string{""}, tokens...)
 	case 3:
 	default:
-		return fmt.Errorf("Unknown format to the option: %v", option)
+		return fmt.Errorf("unknown format to the option: %v", option)
 	}
 
 	for idx, t := range tokens {

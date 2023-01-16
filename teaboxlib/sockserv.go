@@ -34,7 +34,7 @@ func (tsl *TeaboxSocketListener) Cleanup() error {
 
 func (tsl *TeaboxSocketListener) Connect() error {
 	if tsl.conn != nil {
-		return fmt.Errorf("Cannot connect twice to the same socket!")
+		return fmt.Errorf("cannot connect twice to the same socket")
 	}
 
 	var err error
@@ -134,7 +134,7 @@ func (tss *TeaboxSocketServer) AddGlobalAction(action func(*TeaboxAPICall)) *Tea
 // Start the Unix socket Server
 func (tss *TeaboxSocketServer) Start(pth string) error {
 	if len(tss.localActions) == 0 && len(tss.globalActions) == 0 {
-		return fmt.Errorf("No any actions were assigned yet")
+		return fmt.Errorf("no any actions were assigned yet")
 	}
 	tss.listener = NewTeaboxSocketListener(pth).AddActions(tss.globalActions...).AddActions(tss.localActions...)
 	if err := tss.listener.Cleanup(); err != nil {
