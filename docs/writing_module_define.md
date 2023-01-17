@@ -213,6 +213,7 @@ many aspects of an argument, such as:
 - `name`: The argument key, e.g. `--arch` or `--log-level` etc.
 - `label`: The abel for the UI (`string` type)
 - `options`: Possible options to choose (or values). This is a compex option, described below.
+- `attributes`: a list of attributes of the field (explained below).
 
 Example:
 
@@ -221,6 +222,8 @@ args:
   - type: dropdown
     name: --arch
     label: Architecture
+    attributes:
+      - skip-empty
     options:
       - ["Intel 64bit", string, "x86_64"]
       - ["ARM 64bit", string, "aarch_64"]
@@ -228,6 +231,43 @@ args:
 
 While `type`, `name` and `label` are just strings, the directive `options` has its own structure and rules.
 This directive is a two-dimensional array, where each element has a strict structure, depending on the widget.
+
+`attributes`
+
+Attributes are just flags to the given argument and written just as a list of `attributes` key. Currently
+implemented attributes:
+
+Common attributes:
+- `skip-empty`
+  Teabox **always** adds a given option to a target script by default. This attribute allows
+  to omit a named argument in the command line, if a value of it is not provided.
+
+Attributes for `tabular` widget only:
+- `selector`
+  If specified, tabular will show "selected row" column in front of others, displaying a bullet point
+  for visual recognition of selected items.
+
+- `hidden = <INT>`
+  Indicates if a specified column is hidden. Example: `hidden = 3`.
+
+- `value = <INT>`
+  Indicates if a column is a value, so its content is used when the row is selected.
+  Usually this is a composite column and it is usually hidden. Example: `value = 3`
+
+- `height`
+  Sets height of the entire field.
+
+- `multiselect`
+  Turns off toggle mode and allows to select multiple fields.
+
+- `search = [INT,]`
+  Adds a search mode, where appears extra widgets, allowing filter the content in all columns.
+  However it is possible to limit search to a specified columns. Example: `search = 1,2,5`
+
+- `expand = <INT>`
+  Sets the specified column to be stretched, minimising all other columns to their minimum width.
+
+
 
 ### Widgets
 

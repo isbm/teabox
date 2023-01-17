@@ -154,10 +154,13 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 		val := tmw.argset[arg]
 		if val != "" {
 			val = fmt.Sprintf("%s=%s", arg, val)
-		} else {
+		} else if tmw.labeledArg[arg] != nil && !tmw.labeledArg[arg].GetAttrs().HasOption("skip-empty") {
 			val = arg
 		}
-		cargs = append(cargs, val)
+
+		if val != "" {
+			cargs = append(cargs, val)
+		}
 	}
 
 	return cargs
