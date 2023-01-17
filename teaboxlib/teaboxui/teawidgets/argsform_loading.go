@@ -143,8 +143,8 @@ func (ld *TeaboxArgsLoadingWindow) GetSocketAcceptAction() func(*teaboxlib.Teabo
 
 func (ld *TeaboxArgsLoadingWindow) Load(cmd string, args ...string) error {
 	go func() {
-		if err := exec.Command(cmd, args...).Run(); err != nil {
-			teabox.GetTeaboxApp().Stop(fmt.Sprintf("Error: Failure while loading form from setup command.\nCommand: %s\nargs: %v\nSystem exit: %s\n", cmd, args, err.Error()))
+		if output, err := exec.Command(cmd, args...).CombinedOutput(); err != nil {
+			teabox.GetTeaboxApp().Stop(fmt.Sprintf("Error: Failure while loading form from setup command.\nCommand: %s\nargs: %v\nSystem exit: %s\nError details: %s", cmd, args, err.Error(), output))
 		}
 
 		ld.action()
