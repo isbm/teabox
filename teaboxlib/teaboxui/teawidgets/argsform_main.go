@@ -24,7 +24,7 @@ type TeaboxArgsMainWindow struct {
 	argset                 map[string]string                   // map of strings for named arguments.
 	argindex               []string                            // an array of named arguments for args ordering.
 	labeledArg             map[string]*teaboxlib.TeaConfModArg // map of label to arg object pointer. Used to find argument name by label (same as FormItem)
-
+	namedArg               map[string]*teaboxlib.TeaConfModArg
 	*crtview.Form
 }
 
@@ -37,6 +37,7 @@ func NewTeaboxArgsMainWindow(title, subtitle string) *TeaboxArgsMainWindow {
 		argset:     map[string]string{},
 		argindex:   []string{},
 		labeledArg: map[string]*teaboxlib.TeaConfModArg{},
+		namedArg:   map[string]*teaboxlib.TeaConfModArg{},
 	}).init()
 }
 
@@ -154,7 +155,7 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 		val := tmw.argset[arg]
 		if val != "" {
 			val = fmt.Sprintf("%s=%s", arg, val)
-		} else if tmw.labeledArg[arg] != nil && !tmw.labeledArg[arg].GetAttrs().HasOption("skip-empty") {
+		} else if tmw.namedArg[arg].GetAttrs() != nil && !tmw.namedArg[arg].GetAttrs().HasOption("skip-empty") || tmw.namedArg[arg].GetAttrs() == nil {
 			val = arg
 		}
 
@@ -169,6 +170,7 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 // AddArgWidgets adds actual widgets for each argument
 func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand) {
 	for _, a := range cmd.GetArguments() {
+		tmw.namedArg[a.GetArgName()] = a
 		tmw.labeledArg[a.GetWidgetLabel()] = a
 		switch a.GetWidgetType() {
 		case "dropdown", "list":
