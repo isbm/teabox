@@ -1,6 +1,9 @@
 package teabox
 
 import (
+	"io/ioutil"
+
+	"github.com/davecgh/go-spew/spew"
 	"github.com/isbm/crtview"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
@@ -53,4 +56,8 @@ func GetTeaboxApp() *TeaboxApplication {
 
 func GetTeaboxQuitMessage() string {
 	return __MSG_REF
+}
+
+func DumpToFile(fn string, obj ...interface{}) {
+	ioutil.WriteFile(fn, []byte(spew.Sdump(obj...)), 0644)
 }
