@@ -1,7 +1,11 @@
 package teabox
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/isbm/crtview"
@@ -60,4 +64,20 @@ func GetTeaboxQuitMessage() string {
 
 func DumpToFile(fn string, obj ...interface{}) {
 	ioutil.WriteFile(fn, []byte(spew.Sdump(obj...)), 0644)
+}
+
+func AddToFile(fn string, data string) error {
+	f, err := os.OpenFile(fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+	for _, chunk := range []string{"--------------", time.Now().Format("2006-01-02 15:04:05"), data} {
+		if _, err := f.WriteString(fmt.Sprintf("%v\n", strings.TrimSpace(chunk))); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

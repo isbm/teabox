@@ -288,12 +288,14 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 				if err := formPanel.GetLandingPage().Action(modcmd.GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {
 					alert = taf.workspace.alertPopup
 					alert.SetTitle(fmt.Sprintf("%s: Module Error", mod.GetTitle()))
+					alert.SetTextAutofill(false)
 					alert.SetMessage(fmt.Sprintf("Error while calling\n%s\n%s", modcmd.GetCommandPath(), err.Error()))
 					panelPtr = "_alert-popup"
 
 				} else {
 					alert = taf.workspace.infoPopup
 					alert.SetTitle("Success!")
+					alert.SetTextAutofill(false)
 					alert.SetMessage(fmt.Sprintf("%s finished", mod.GetTitle()))
 				}
 				alert.SetOnConfirmAction(func() {

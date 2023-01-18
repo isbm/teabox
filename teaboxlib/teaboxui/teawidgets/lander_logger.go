@@ -98,10 +98,14 @@ func (tsw *TeaLoggerWindowLander) GetWindowAction() func(call *teaboxlib.TeaboxA
 func (tsw *TeaLoggerWindowLander) Action(cmdpath string, cmdargs ...string) error {
 	cmd := exec.Command(cmdpath, cmdargs...)
 	cmd.Stdout = tsw.GetWindow()
-	cmd.Stderr = tsw.GetWindow()
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf(fmt.Sprintf("Error: command \"%s %s\" quit as %s", cmdpath, strings.Join(cmdargs, " "), err.Error()))
+	buf := new(strings.Builder)
+	cmd.Stderr = buf
+
+	err := cmd.Run()
+	if err != nil {
+		teabox.AddToFile("eco-errors.log", fmt.Sprintf("Error: command \"%s %s\" quit as %s\nOutput: %s", cmdpath, strings.Join(cmdargs, " "), err.Error(), buf.String()))
+		return fmt.Errorf(buf.String())
 	}
 
 	return nil
