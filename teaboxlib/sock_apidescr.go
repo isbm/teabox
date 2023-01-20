@@ -210,5 +210,24 @@ var FORM_CLR_BY_LABEL string = "field.reset.by-label"
 
 // Clear value of a field by order index. Example usage:
 //
-//	field.reset.by-label::{0}
+//	field.reset.by-ord::{0}
 var FORM_CLR_BY_ORD string = "field.reset.by-ord"
+
+// Add data to a table view. Calling this multiple times will append data
+// in the tabular widget to the bottom of it.
+//
+// Data is in JSON format, but essentially it is a two-dimensional array (set of rows).
+// Loading is safe: if a row appears to be too short, then the other columns will be
+// filled with an empty strings. If it will be too long, then a row will be just trimmed.
+//
+// Important note to the JSON syntax: the whole body must be quoted with a single quotes.
+// The string scalar values must be quoted with a double quotes.
+//
+//	field.table.add.by-ord:json:{0}'[["Your", "JSON"], ["is", "here"]]'
+var FORM_ADD_TABLE_BY_ORD string = "field.table.add.by-ord"
+
+// Set data to a table view. Acts like add data, except it replaces it.
+var FORM_SET_TABLE_BY_ORD string = "field.table.set.by-ord"
+
+// Clear all data from a table view.
+var FORM_CLR_TABLE_BY_ORD string = "field.table.clear.by-ord"

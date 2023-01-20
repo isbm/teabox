@@ -1,6 +1,7 @@
 package teawidgets
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/isbm/crtview"
 	"github.com/isbm/crtview/crtwin/crtforms"
+	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 )
 
@@ -295,18 +297,24 @@ func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxA
 			tmw.updateField(call, tmw.GetFormItemByLabel(call.GetKey()), __OP_W_SET)
 		case teaboxlib.FORM_SET_BY_ORD:
 			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_SET)
+		case teaboxlib.FORM_SET_TABLE_BY_ORD:
+			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_SET)
 
 		// Adding/merging new values
 		case teaboxlib.FORM_ADD_BY_LABEL:
 			tmw.updateField(call, tmw.GetFormItemByLabel(call.GetKey()), __OP_W_ADD)
 		case teaboxlib.FORM_ADD_BY_ORD:
 			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_ADD)
+		case teaboxlib.FORM_ADD_TABLE_BY_ORD:
+			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_SET)
 
 		// Clearing/resetting
 		case teaboxlib.FORM_CLR_BY_LABEL:
 			tmw.updateField(call, tmw.GetFormItemByLabel(call.GetKey()), __OP_W_CLR)
 		case teaboxlib.FORM_CLR_BY_ORD:
 			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_CLR)
+		case teaboxlib.FORM_CLR_TABLE_BY_ORD:
+			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_SET)
 		}
 	}
 }
@@ -360,6 +368,48 @@ func (tmw *TeaboxArgsMainWindow) updateField(call *teaboxlib.TeaboxAPICall, item
 			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), opts[0].GetText())
 		case __OP_W_CLR:
 			field.SetOptions(nil, []*crtview.DropDownOption{}...)
+			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
+		}
+
+	case *crtforms.FormTabularChoice:
+		if call.GetType() != "json" {
+			teabox.GetTeaboxApp().Stop(fmt.Sprintf("table data requires two dimentional array (tabular)"+
+				" in JSON format. Current type: %s", call.GetType()))
+		}
+
+		td := call.GetValue()
+		if td == nil {
+			teabox.GetTeaboxApp().Stop("tabular field requested for the update, but no JSON data was found")
+		}
+
+		var rdata []interface{}
+		if err := json.Unmarshal([]byte(td.(string)), &rdata); err != nil {
+			teabox.GetTeaboxApp().Stop(fmt.Sprintf("unable to parse tabular data: %s. Is the whole JSON payload is in one "+
+				"single-quoted string and scalar values are quoted with a double-quotes?", err.Error()))
+		}
+
+		rows := [][]string{}
+		for _, iRow := range rdata {
+			row := []string{}
+			for _, c := range iRow.([]interface{}) {
+				row = append(row, c.(string))
+			}
+			rows = append(rows, row)
+		}
+
+		switch op {
+		case __OP_W_ADD:
+			field.AppendContent(rows)
+		case __OP_W_CLR:
+			field.Clear()
+		case __OP_W_SET:
+			field.ReplaceContent(rows)
+		}
+
+		if op != __OP_W_CLR {
+			field.Select(1, 1)
+			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), field.GetValueAt(0))
+		} else {
 			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
 		}
 	}
