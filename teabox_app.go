@@ -66,6 +66,8 @@ func DumpToFile(fn string, obj ...interface{}) {
 	ioutil.WriteFile(fn, []byte(spew.Sdump(obj...)), 0644)
 }
 
+// AddToFile a text. Used for quick debug purposes where using a real debugger
+// is too tedious and time consuming. :-)
 func AddToFile(fn string, data string) error {
 	f, err := os.OpenFile(fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -80,4 +82,11 @@ func AddToFile(fn string, data string) error {
 	}
 
 	return nil
+}
+
+// DebugToFile writes a data to a teabox-trace.log in the current directory.
+// Since screen is locked, printing to the STDOUT is not an option, so
+// this prints to a file, which one can watch with "tail -f" elsewhere.
+func DebugToFile(data string) error {
+	return AddToFile("teabox-trace.log", data)
 }
