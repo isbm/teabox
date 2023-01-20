@@ -96,6 +96,7 @@ func (tc *TeaConf) initConfig() error {
 	tc.title = initconf.Root().String("title", "")
 
 	err := godirwalk.Walk(tc.contentPath, &godirwalk.Options{
+		FollowSymbolicLinks: true,
 		Callback: func(pth string, de *godirwalk.Dirent) error {
 			if pth == tc.initConfPath {
 				return nil
