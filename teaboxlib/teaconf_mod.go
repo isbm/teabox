@@ -194,6 +194,10 @@ func (a *TeaConfModArg) GetWidgetLabel() string {
 
 // GetAttrs returns argument extra attributes
 func (a *TeaConfModArg) GetAttrs() *TeaConfArgAttributes {
+	if a.attrs == nil {
+		return NewTeaConfArgAttributes(nil)
+	}
+
 	return a.attrs
 }
 

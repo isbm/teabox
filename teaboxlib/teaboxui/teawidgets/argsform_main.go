@@ -154,13 +154,20 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 
 	// Get ordered arguments, if any
 	for _, arg := range tmw.argindex {
+		// Skip argument, it is for view-only
+		if tmw.namedArg[arg].GetAttrs().HasOption("view-only") {
+			continue
+		}
+
+		// Maybe skip argument, depending how on value conditions
 		val := tmw.argset[arg]
 		if val != "" {
 			val = fmt.Sprintf("%s=%s", arg, val)
-		} else if tmw.namedArg[arg].GetAttrs() != nil && !tmw.namedArg[arg].GetAttrs().HasOption("skip-empty") || tmw.namedArg[arg].GetAttrs() == nil {
+		} else if tmw.namedArg[arg].GetAttrs() == nil || !tmw.namedArg[arg].GetAttrs().HasOption("skip-empty") {
 			val = arg
 		}
 
+		// Add agreed argument
 		if val != "" {
 			cargs = append(cargs, val)
 		}

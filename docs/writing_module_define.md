@@ -239,8 +239,12 @@ implemented attributes:
 
 Common attributes:
 - `skip-empty`
-  Teabox **always** adds a given option to a target script by default. This attribute allows
-  to omit a named argument in the command line, if a value of it is not provided.
+  Omit empty named argument. Since teabox **always** adds a given option to a target script by default,
+  this attribute allows to omit a named argument in the command line, if no value given.
+
+- `view-only`
+  Teabox will **never** send this field as an option or a named argument. It turns any field only for
+  information purposes. For example, to show a table with existing repositories or users or user groups etc.
 
 Attributes for `tabular` widget only:
 - `selector`
