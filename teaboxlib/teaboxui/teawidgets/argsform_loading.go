@@ -141,6 +141,12 @@ func (ld *TeaboxArgsLoadingWindow) GetSocketAcceptAction() func(*teaboxlib.Teabo
 	}
 }
 
+// SkipLoad without any setup action (used for unmet conditions)
+func (ld *TeaboxArgsLoadingWindow) SkipLoad() {
+	ld.action()
+}
+
+// Load form (call setup script)
 func (ld *TeaboxArgsLoadingWindow) Load(cmd string, args ...string) error {
 	go func() {
 		if output, err := exec.Command(cmd, args...).CombinedOutput(); err != nil {
