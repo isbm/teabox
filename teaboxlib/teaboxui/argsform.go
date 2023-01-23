@@ -11,6 +11,7 @@ import (
 	"gitlab.com/isbm/teabox"
 	"gitlab.com/isbm/teabox/teaboxlib"
 	"gitlab.com/isbm/teabox/teaboxlib/teaboxui/teawidgets"
+	"gitlab.com/isbm/teabox/teaboxlib/teaconditions"
 )
 
 // TeaFormsPanel is a layer of windows, and it contains many TeaForm instances to switch between them.
@@ -83,6 +84,20 @@ func (tfp *TeaFormsPanel) StartListener() error {
 	}
 
 	return nil
+}
+
+// SkipLoad, if there is at least one form mute with skipping load.
+func (tfp *TeaFormsPanel) SkipLoad() bool {
+	for _, ref := range tfp.objref {
+		form, ok := ref.(*teawidgets.TeaboxArgsMainWindow)
+		if !ok {
+			continue
+		}
+		if form.SkipLoad() {
+			return true
+		}
+	}
+	return false
 }
 
 // ShowLandingWindow and start Unix socket server listener with the current callback pack
@@ -200,10 +215,15 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 				cmd = formsPanel.GetModuleConfig().GetSetupCommand()
 			}
 
-			// Call the loader to pre-populate everything
-			if err := loader.Load(cmd, formsPanel.GetModuleConfig().GetSetupCommandArgs()...); err != nil {
-				teabox.GetTeaboxApp().GetScreen().Clear()
-				taf.GetLogger().Panic(err)
+			// Skip loader if conditions are not met
+			if formsPanel.SkipLoad() {
+				loader.SkipLoad()
+			} else {
+				// Call the loader to pre-populate everything
+				if err := loader.Load(cmd, formsPanel.GetModuleConfig().GetSetupCommandArgs()...); err != nil {
+					teabox.GetTeaboxApp().GetScreen().Clear()
+					taf.GetLogger().Panic(err)
+				}
 			}
 		} else {
 			// No loader specified, show the form "as is" directly
@@ -226,7 +246,10 @@ func (taf *TeaboxArgsForm) init() *TeaboxArgsForm {
 
 	// Build all individual forms
 	for _, mod := range teabox.GetTeaboxApp().GetGlobalConfig().GetModuleStructure() {
-		taf.generateForms(mod)
+		if err := taf.generateForms(mod); err != nil {
+			// XXX: replace panic with a graceful shutdown
+			panic(err.Error())
+		}
 	}
 
 	return taf
@@ -243,15 +266,17 @@ func (taf *TeaboxArgsForm) onError(err error) {
 	}
 }
 
-func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
+func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) error {
 	if c.IsGroupContainer() {
 		for _, x := range c.GetChildren() {
-			taf.generateForms(x)
+			if err := taf.generateForms(x); err != nil {
+				return err
+			}
 		}
 	}
 
 	if len(c.GetCommands()) < 1 {
-		return
+		return nil
 	}
 
 	mod := c.(*teaboxlib.TeaConfModule) // Only module can have at least command
@@ -269,52 +294,67 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) {
 		}
 		taf.modCmdIndex[f.GetId()] = cmd
 
-		// Add arguments
-		f.AddArgWidgets(cmd)
-
-		// Or next/previous, if not the last form
-		f.AddButton("Start", func() {
-			// Show resulting end-widget. Those are:
-			// - STDOUT "dumb" writer, shows just an output, like a terminal
-			// - Checklist done/todo progress screen that has various features, such as progress-bar, status etc (TODO)
+		// Process module conditions
+		conditions, err := teaconditions.NewTeaConditionsProcessor(mod.GetConditions())
+		if err != nil {
+			return err
+		}
+		if !conditions.Satisfied() {
+			f.SetSkipLoad(func() {
+				teabox.GetTeaboxApp().SetFocus(GetTeaboxMainWindow().GetMainMenu().GetWidget())
+				taf.ShowIntroScreen()
+			}, conditions.GetInfoMessage())
+		} else {
+			// Build a module UI, conditions are met.
 			//
-			// NOTE: landing window also starts the listener, to which Action() below connects via resulting command Action() calls.
-			formPanel.ShowLandingWindow(mod.GetLandingPageType())
-			go func() {
-				// Run command on the landing window
-				var panelPtr string = "_info-popup"
-				var alert *crtwin.ModalDialog
-				modcmd := taf.modCmdIndex[f.GetId()]
-				if err := formPanel.GetLandingPage().Action(modcmd.GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {
-					alert = taf.workspace.alertPopup
-					alert.SetTitle(fmt.Sprintf("%s: Module Error", mod.GetTitle()))
-					alert.SetTextAutofill(false)
-					alert.SetMessage(fmt.Sprintf("Error while calling\n%s\n%s", modcmd.GetCommandPath(), err.Error()))
-					panelPtr = "_alert-popup"
+			// Add arguments
+			f.AddArgWidgets(cmd)
 
-				} else {
-					alert = taf.workspace.infoPopup
-					alert.SetTitle("Success!")
-					alert.SetTextAutofill(false)
-					alert.SetMessage(fmt.Sprintf("%s finished", mod.GetTitle()))
-				}
-				alert.SetOnConfirmAction(func() {
-					formPanel.StopLandingWindow(f.GetId())
-					taf.workspace.HidePanel(panelPtr)
-				})
-				taf.workspace.ShowPanel(panelPtr)
-				teabox.GetTeaboxApp().SetFocus(alert.GetButton(0)) // Focus can be set only if Primitive is visible
-				teabox.GetTeaboxApp().Draw()
-			}()
-		})
+			// Or next/previous, if not the last form
+			f.AddButton("Start", func() {
+				// Show resulting end-widget. Those are:
+				// - STDOUT "dumb" writer, shows just an output, like a terminal
+				// - Checklist done/todo progress screen that has various features, such as progress-bar, status etc (TODO)
+				//
+				// NOTE: landing window also starts the listener, to which Action() below connects via resulting command Action() calls.
+				formPanel.ShowLandingWindow(mod.GetLandingPageType())
+				go func() {
+					// Run command on the landing window
+					var panelPtr string = "_info-popup"
+					var alert *crtwin.ModalDialog
+					modcmd := taf.modCmdIndex[f.GetId()]
+					if err := formPanel.GetLandingPage().Action(modcmd.GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {
+						alert = taf.workspace.alertPopup
+						alert.SetTitle(fmt.Sprintf("%s: Module Error", mod.GetTitle()))
+						alert.SetTextAutofill(false)
+						alert.SetMessage(fmt.Sprintf("Error while calling\n%s\n%s", modcmd.GetCommandPath(), err.Error()))
+						panelPtr = "_alert-popup"
 
-		f.AddButton("Cancel", func() {
-			teabox.GetTeaboxApp().SetFocus(GetTeaboxMainWindow().GetMainMenu().GetWidget())
-			taf.ShowIntroScreen()
-		})
+					} else {
+						alert = taf.workspace.infoPopup
+						alert.SetTitle("Success!")
+						alert.SetTextAutofill(false)
+						alert.SetMessage(fmt.Sprintf("%s finished", mod.GetTitle()))
+					}
+					alert.SetOnConfirmAction(func() {
+						formPanel.StopLandingWindow(f.GetId())
+						taf.workspace.HidePanel(panelPtr)
+					})
+					taf.workspace.ShowPanel(panelPtr)
+					teabox.GetTeaboxApp().SetFocus(alert.GetButton(0)) // Focus can be set only if Primitive is visible
+					teabox.GetTeaboxApp().Draw()
+				}()
+			})
 
+			f.AddButton("Cancel", func() {
+				teabox.GetTeaboxApp().SetFocus(GetTeaboxMainWindow().GetMainMenu().GetWidget())
+				taf.ShowIntroScreen()
+			})
+
+		}
 		break // currently we take only a first command
 	}
 
 	taf.allModulesForms.AddPanel(mod.GetTitle(), formPanel, true, false)
+	return nil
 }

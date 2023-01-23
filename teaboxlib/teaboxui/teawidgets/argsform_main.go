@@ -27,6 +27,8 @@ type TeaboxArgsMainWindow struct {
 	argindex               []string                            // an array of named arguments for args ordering.
 	labeledArg             map[string]*teaboxlib.TeaConfModArg // map of label to arg object pointer. Used to find argument name by label (same as FormItem)
 	namedArg               map[string]*teaboxlib.TeaConfModArg
+	skipLoad               bool
+
 	*crtview.Form
 }
 
@@ -40,6 +42,7 @@ func NewTeaboxArgsMainWindow(title, subtitle string) *TeaboxArgsMainWindow {
 		argindex:   []string{},
 		labeledArg: map[string]*teaboxlib.TeaConfModArg{},
 		namedArg:   map[string]*teaboxlib.TeaConfModArg{},
+		skipLoad:   false,
 	}).init()
 }
 
@@ -61,6 +64,18 @@ func (tmw *TeaboxArgsMainWindow) init() *TeaboxArgsMainWindow {
 	tmw.SetButtonsToBottom(true)
 
 	return tmw
+}
+
+func (tmw *TeaboxArgsMainWindow) SkipLoad() bool {
+	return tmw.skipLoad
+}
+
+func (tmw *TeaboxArgsMainWindow) SetSkipLoad(action func(), message string) {
+	tmw.skipLoad = true
+
+	tmw.AddFormItem(crtforms.NewFormTextView().SetText(message))
+	tmw.AddButton("Close", action)
+	tmw.SetFocus(1) // Focus on 2nd element, i.e. button in this case
 }
 
 func (tmw *TeaboxArgsMainWindow) GetId() string {
