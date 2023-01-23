@@ -308,7 +308,7 @@ type TeaConfModule struct {
 	socketPath string
 	landing    string
 	setup      string
-	conditions []map[string]string
+	conditions []map[string][]string
 	commands   []*TeaConfModCommand
 
 	TeaConfBaseEntity
@@ -379,26 +379,43 @@ func (tcf *TeaConfModule) SetCondition(cond interface{}) *TeaConfModule {
 		return tcf
 	}
 
-	tcf.conditions = []map[string]string{}
+	tcf.conditions = []map[string][]string{}
 	condset, ok := cond.([]interface{})
 	if !ok {
 		panic("Wrong configuration of the module: " + tcf.title)
 	}
 
 	for _, icnd := range condset {
-		cnd := map[string]string{}
-		imcnd := icnd.(map[interface{}]interface{})
+		cnd := map[string][]string{}
+		imcnd, cnvOk := icnd.(map[interface{}]interface{})
+		if !cnvOk {
+			panic(fmt.Sprintf("wrong condition syntax: %v", icnd))
+		}
 		for k, v := range imcnd {
 			ks, ok := k.(string)
 			if !ok {
 				panic(fmt.Sprintf("Wrong configuration of the module %s: key %v is not string", tcf.title, k))
 			}
-			vs, ok := v.(string)
+			varr, ok := v.([]interface{})
 			if !ok {
-				panic(fmt.Sprintf("Wrong configuration of the module %s: value %v is not string", tcf.title, v))
-			}
+				// This is a message, so always one element in the array
+				cnd[ks] = []string{v.(string)}
+			} else {
+				// This is a list of clauses
+				for _, vs := range varr {
+					vs, ok := vs.(string)
+					if !ok {
+						panic(fmt.Sprintf("Wrong configuration of the module %s: value %v is not an array of strings", tcf.title, v))
+					}
 
-			cnd[ks] = vs
+					_, ex := cnd[ks]
+
+					if !ex {
+						cnd[ks] = []string{} // a container for conditions
+					}
+					cnd[ks] = append(cnd[ks], vs)
+				}
+			}
 		}
 		tcf.conditions = append(tcf.conditions, cnd)
 	}
@@ -406,7 +423,7 @@ func (tcf *TeaConfModule) SetCondition(cond interface{}) *TeaConfModule {
 	return tcf
 }
 
-func (tcf *TeaConfModule) GetCondition() []map[string]string {
+func (tcf *TeaConfModule) GetConditions() []map[string][]string {
 	return tcf.conditions
 }
 
