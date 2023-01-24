@@ -402,14 +402,9 @@ func (tcf *TeaConfModule) SetCondition(cond interface{}) *TeaConfModule {
 				cnd[ks] = []string{v.(string)}
 			} else {
 				// This is a list of clauses
-				for _, vs := range varr {
-					vs, ok := vs.(string)
-					if !ok {
-						panic(fmt.Sprintf("Wrong configuration of the module %s: value %v is not an array of strings", tcf.title, v))
-					}
-
+				for _, ivs := range varr {
+					vs := fmt.Sprintf("%v", ivs)
 					_, ex := cnd[ks]
-
 					if !ex {
 						cnd[ks] = []string{} // a container for conditions
 					}
