@@ -74,6 +74,8 @@ func (cnd *TeaConditionsProcessor) load(condition map[string][]string) (TeaCondi
 		switch rule {
 		case "all-absent", "absent", "all-present", "present":
 			return NewTeaCondFile(message, rule, condition[rule])
+		case "gid", "uid":
+			return NewTeaCondPerm(message, rule, condition[rule])
 		default:
 			return nil, fmt.Errorf("unknown condition")
 		}

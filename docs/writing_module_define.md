@@ -121,7 +121,10 @@ following way:
 
 ```yaml
 conditions:
-  - ...
+  - clause
+    - target
+    - target
+    message: ....
   - ...
   - ...
 ```
@@ -130,11 +133,44 @@ Each condition has a preposition and an action what to do _otherwise_. For examp
 
 ```yaml
 conditions:
-  - absent: /var/run/apt.lock
+  - absent:
+    - /var/run/apt.lock
     message: "Package manager is currently running!"
 
-  - present: /etc/hosts
+  - present:
+    - /etc/hosts
     message: "Unable to find /etc/hosts"
+```
+
+**File Checks**
+
+  `all-present`, `all-absent`, `present`, `absent`.
+
+All keys are self-explanatory: "`all-*`" means all files speficied needs to be either present or absent, otherwise, any of those. Example:
+
+```yaml
+conditions:
+  - all-present:
+    - /etc/passwd
+    - /etc/shadow
+
+  - all-absent:
+    - /var/run/.lock
+    - /var/run/.stop
+```
+
+**Permissions Checks**
+
+  `uid`, `gid`
+
+Check UID and/or GID if _any_ of these matches current user. NOTE: on some OS they are strings.
+So you can specify, e.g "root", as integer `- 0` but also as as string `- "0"`:
+
+```yaml
+conditions:
+  - uid:
+    - 0
+    message: You are not Groot! You should be much cooler than now. :-P
 ```
 
 ### The UI and the arguments
