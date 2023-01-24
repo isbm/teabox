@@ -67,6 +67,10 @@ func (tc *TeaConf) GetTitle() string {
 	return tc.title
 }
 
+func (tc *TeaConf) GetSocketPath() string {
+	return tc.callbackSocketPath
+}
+
 func (tc *TeaConf) GetModuleStructure() []TeaConfComponent {
 	return tc.modIndex
 }
@@ -121,7 +125,7 @@ func (tc *TeaConf) initConfig() error {
 				if c.Root().Raw()["commands"] != nil {
 					m.SetCondition(c.Root().Raw()["conditions"]).
 						SetCommands(c.Root().Raw()["commands"]).
-						SetCallbackPath(tc.callbackSocketPath).
+						SetCallbackPath(tc.GetSocketPath()).
 						SetLandingPageType(c.Root().String("landing", "")).
 						SetSetupCommand(c.Root().String("setup", ""))
 				}
