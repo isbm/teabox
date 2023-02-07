@@ -4,9 +4,11 @@ SELF_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 source $SELF_PATH/../../../lib/shell/bash-common.sh
 
 function setup() {
+    echo "Setup phase"
 }
 
 function run() {
+    echo "$@"
 }
 
 if [[ $# -eq 0 ]]; then
@@ -19,7 +21,7 @@ else
 		break
 		;;
             *)
-		run
+		run $@
 		break
 		;;
         esac
