@@ -205,6 +205,8 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 			tmw.AddCheckBox(a)
 		case "tabular":
 			tmw.AddTabularField(a)
+		case "password", "masked":
+			tmw.AddPasswordField(a)
 		default:
 			fmt.Printf("Module config error: Unknown widget definition \"%s\" for command argument \"%s\" at %s\n", a.GetWidgetType(), cmd.GetTitle(), cmd.GetCommandPath())
 			os.Exit(1)
@@ -273,6 +275,7 @@ Text could have only one argument as a default text:
 The field can be also completely empty.
 */
 func (tmw *TeaboxArgsMainWindow) AddInputField(arg *teaboxlib.TeaConfModArg) error {
+	// XXX: this will omit the whole widget, if there no default value
 	if len(arg.GetOptions()) > 0 {
 		val := arg.GetOptions()[0].GetValueAsString()
 		if val != "" {
@@ -284,6 +287,23 @@ func (tmw *TeaboxArgsMainWindow) AddInputField(arg *teaboxlib.TeaConfModArg) err
 			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), strings.TrimSpace(text))
 		})
 	}
+
+	return nil
+}
+
+func (tmw *TeaboxArgsMainWindow) AddPasswordField(arg *teaboxlib.TeaConfModArg) error {
+	var val string = ""
+	if len(arg.GetOptions()) > 0 {
+		val = arg.GetOptions()[0].GetValueAsString()
+	}
+
+	if val != "" {
+		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), val)
+	}
+
+	tmw.Form.AddPasswordField(arg.GetWidgetLabel(), val, 0, '*', func(text string) {
+		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), text) // Don't trim space here :)
+	})
 
 	return nil
 }

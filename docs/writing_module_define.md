@@ -346,6 +346,17 @@ options:
   - ["Borat Sagdiev"]
 ```
 
+#### Password, Masked
+
+Password or masked text widget is completely identical to `text` widget,
+except it is called as `password` or `masked`. Same as `text`, it would require options, which can be also completely empty:
+
+```yaml
+options:
+  - []
+```
+
+
 #### Toggle (checkbox)
 
 This widget is rendered as a checkbox and is called `toggle`. If it is checked, then the static flag
