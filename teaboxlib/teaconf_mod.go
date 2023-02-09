@@ -125,6 +125,9 @@ type TeaConfModArg struct {
 	// Attributes of the argument
 	attrs *TeaConfArgAttributes
 
+	// Signals of the widget
+	signals *TeaConfArgSignals
+
 	// Preset options. They can be also loaded dynamically via socket
 	options []*TeaConfCmdOption
 
@@ -151,6 +154,19 @@ func NewTeaConfModArg(args map[interface{}]interface{}) *TeaConfModArg {
 		case "attributes":
 			attrs, _ := wd.([]interface{}) // Avoid explicit cast crash. If syntax is wrong, then just skip it by passing nil.
 			a.attrs = NewTeaConfArgAttributes(attrs)
+		case "signals":
+			sigs, ok := wd.(map[interface{}]interface{})
+			if !ok {
+				a.GetLogger().Error("signals should be key/value syntax")
+				a.GetLogger().Debug(spew.Sdump(wd))
+				os.Exit(1)
+			} else {
+				var err error
+				a.signals, err = NewTeaConfArgSignals(sigs)
+				if err != nil {
+					a.GetLogger().Error(err.Error())
+				}
+			}
 		}
 	}
 
@@ -199,6 +215,15 @@ func (a *TeaConfModArg) GetAttrs() *TeaConfArgAttributes {
 	}
 
 	return a.attrs
+}
+
+func (a *TeaConfModArg) GetSignals() *TeaConfArgSignals {
+	if a.signals == nil {
+		sigs, _ := NewTeaConfArgSignals(nil)
+		return sigs
+	}
+
+	return a.signals
 }
 
 func (a *TeaConfModArg) GetOptions() []*TeaConfCmdOption {
