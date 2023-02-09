@@ -20,6 +20,14 @@ else
 		setup
 		break
 		;;
+	    --do-something-when-checked)
+		date >> checked.txt
+		break
+		;;
+	    --do-something-when-is-not-checked)
+		date >> unchecked.txt
+		break
+		;;
             *)
 		run $@
 		break
