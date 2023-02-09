@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
+	"path"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -28,6 +30,7 @@ type TeaboxArgsMainWindow struct {
 	labeledArg             map[string]*teaboxlib.TeaConfModArg // map of label to arg object pointer. Used to find argument name by label (same as FormItem)
 	namedArg               map[string]*teaboxlib.TeaConfModArg
 	skipLoad               bool
+	confModCommand         *teaboxlib.TeaConfModCommand
 
 	*crtview.Form
 }
@@ -193,7 +196,8 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 
 // AddArgWidgets adds actual widgets for each argument
 func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand) {
-	for _, a := range cmd.GetArguments() {
+	tmw.confModCommand = cmd
+	for _, a := range tmw.confModCommand.GetArguments() {
 		tmw.namedArg[a.GetArgName()] = a
 		tmw.labeledArg[a.GetWidgetLabel()] = a
 		switch a.GetWidgetType() {
@@ -321,11 +325,40 @@ func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error
 
 	tmw.Form.AddCheckBox(arg.GetWidgetLabel(), "", state, func(checked bool) {
 		if checked {
+			// Add argument notification
 			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
+
+			// Add selected signal
+			if err := tmw.Call(arg.GetSignals().GetSignalValue("selected")); err != nil {
+				teabox.DebugToFile(fmt.Sprintf("Error on \"%s\" while calling checkbox \"%s\" hook: %s",
+					tmw.GetId(), arg.GetArgName(), err.Error()))
+			}
 		} else {
+			// Remove argument notification
 			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
+
+			// Add unselected signal
+			if err := tmw.Call(arg.GetSignals().GetSignalValue("deselected")); err != nil {
+				teabox.DebugToFile(fmt.Sprintf("Error on \"%s\" while calling checkbox \"%s\" hook: %s",
+					tmw.GetId(), arg.GetArgName(), err.Error()))
+			}
 		}
 	})
+
+	return nil
+}
+
+// Call action
+func (tmw *TeaboxArgsMainWindow) Call(act *teaboxlib.TeaConfArgSignalAction) error {
+	if act.GetName() == "" { // Undefined call
+		return nil
+	}
+
+	pth := path.Dir(tmw.confModCommand.GetCommandPath())
+	out, err := exec.Command(path.Join(pth, act.GetName()), act.GetArguments()...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("error: %v\n%v", err.Error(), out)
+	}
 
 	return nil
 }
