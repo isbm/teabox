@@ -76,7 +76,23 @@ func (tfp *TeaFormsPanel) AddPanel(name string, item crtview.Primitive, resize b
 // StartListener of Unix socket, and add handlers for it.
 func (tfp *TeaFormsPanel) StartListener() error {
 	tfp.landingPage.Reset()
-	teabox.GetTeaboxApp().GetCallbackServer().AddLocalAction(tfp.landingPage.GetWindowAction())
+	teabox.GetTeaboxApp().GetCallbackServer().
+		AddLocalAction(tfp.landingPage.GetWindowAction()).
+		AddLocalAction(func(c *teaboxlib.TeaboxAPICall) {
+			modId := path.Base(tfp.moduleConfig.GetModulePath())
+			switch c.GetClass() {
+			case "session.set":
+				teabox.GetTeaboxApp().GetSession().Set(modId, c.GetKey(), c.GetValue())
+			case "session.get":
+				// XXX: Implement getting data. This should be also writer not just listener in the socket
+			case "session.keys":
+				// XXX: Implement getting data. This should be also writer not just listener in the socket
+			case "session.delete":
+				teabox.GetTeaboxApp().GetSession().Delete(modId, c.GetString())
+			case "session.flush":
+				teabox.GetTeaboxApp().GetSession().Flush(modId)
+			}
+		})
 
 	// Run the Unix server instance
 	if err := teabox.GetTeaboxApp().GetCallbackServer().Start(tfp.moduleConfig.GetCallbackPath()); err != nil {
