@@ -22,6 +22,7 @@ Welcome to Teabox's documentation!
    writing_module_define
    writing_module_preload
    writing_module_lander
+   signal_slots
    rebranding
    api_overview
    api_list
