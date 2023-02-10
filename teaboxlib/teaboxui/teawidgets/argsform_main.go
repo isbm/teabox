@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
-	"path"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -324,41 +322,21 @@ func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error
 	}
 
 	tmw.Form.AddCheckBox(arg.GetWidgetLabel(), "", state, func(checked bool) {
+		sig := teaboxlib.NewSigCall(tmw.confModCommand)
 		if checked {
 			// Add argument notification
 			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
 
 			// Add selected signal
-			if err := tmw.Call(arg.GetSignals().GetSignalValue("selected")); err != nil {
-				teabox.DebugToFile(fmt.Sprintf("Error on \"%s\" while calling checkbox \"%s\" hook: %s",
-					tmw.GetId(), arg.GetArgName(), err.Error()))
-			}
+			sig.CallSignal(arg.GetSignals().GetSignalValue("selected"))
 		} else {
 			// Remove argument notification
 			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
 
 			// Add unselected signal
-			if err := tmw.Call(arg.GetSignals().GetSignalValue("deselected")); err != nil {
-				teabox.DebugToFile(fmt.Sprintf("Error on \"%s\" while calling checkbox \"%s\" hook: %s",
-					tmw.GetId(), arg.GetArgName(), err.Error()))
-			}
+			sig.CallSignal(arg.GetSignals().GetSignalValue("deselected"))
 		}
 	})
-
-	return nil
-}
-
-// Call action
-func (tmw *TeaboxArgsMainWindow) Call(act *teaboxlib.TeaConfArgSignalAction) error {
-	if act.GetName() == "" { // Undefined call
-		return nil
-	}
-
-	pth := path.Dir(tmw.confModCommand.GetCommandPath())
-	out, err := exec.Command(path.Join(pth, act.GetName()), act.GetArguments()...).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("error: %v\n%v", err.Error(), out)
-	}
 
 	return nil
 }
