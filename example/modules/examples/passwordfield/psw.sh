@@ -21,11 +21,10 @@ else
 		break
 		;;
 	    --do-something-when-checked)
-		date >> checked.txt
+		api session.set "{test}John Smith"
 		break
 		;;
 	    --do-something-when-is-not-checked)
-		date >> unchecked.txt
 		break
 		;;
             *)
