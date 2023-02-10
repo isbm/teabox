@@ -411,7 +411,7 @@ func (tmw *TeaboxArgsMainWindow) updateField(call *teaboxlib.TeaboxAPICall, item
 
 	case *crtview.CheckBox:
 		if op != __OP_W_CLR {
-			field.SetChecked(call.GetBool())
+			field.SetChecked(call.GetBool()) // This does NOT triggers onChange hook!
 			if call.GetBool() {
 				tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
 			} else {
