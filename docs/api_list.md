@@ -196,3 +196,40 @@ Clear value of a field by label. Example usage:
 Clear value of a field by order index. Example usage:
 
     field.reset.by-label::{0}
+
+## Session (State Storage)
+
+Session is a very simple key/value in-memory storage to maintain module state across scripts
+and share the information between them, if it is needed. Syntax is the same as key/value
+accessing fields.
+### `sesstion.set`
+
+Set a value to the session using a key. Example usage:
+
+    session.set::{name}"John Smith"
+    session.set:int:{age}42
+
+### `session.get`
+
+Get a value from the session, using a key. Example usage (keys are _always_ strings):
+
+    session.get::name
+    session.get::age
+
+### `session.keys`
+
+Get a list of available keys in the session. It returns a list of them. Example:
+
+    session.keys::
+
+### `session.delete`
+
+Delete a particular value by key from the session. Example (keys are _always_ strings):
+
+    session.delete::name
+
+### `session.flush`
+
+Flush the entire session, emptying it. Example:
+
+    session.flush::
