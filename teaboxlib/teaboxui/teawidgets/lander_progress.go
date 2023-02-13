@@ -139,7 +139,7 @@ type TeaProgressWindowLander struct {
 	lookupRegex  string
 
 	checklist   *landerChecklist
-	action      func(call *teaboxlib.TeaboxAPICall)
+	action      func(call *teaboxlib.TeaboxAPICall) string
 	title       *crtview.TextView    // Title of the lander page
 	eventBar    *crtview.TextView    // Like a status bar, but shows a chunk of the progress
 	generalInfo *crtview.TextView    // General text information (static per module)
@@ -222,7 +222,7 @@ func (pl *TeaProgressWindowLander) init() *TeaProgressWindowLander {
 	//pl.AddItem(spacer, 4, 1, false)
 
 	// Define API receiver
-	pl.action = func(call *teaboxlib.TeaboxAPICall) {
+	pl.action = func(call *teaboxlib.TeaboxAPICall) string {
 		switch call.GetClass() {
 		case teaboxlib.COMMON_PROGRESS_EVENT:
 			pl.eventBar.SetText(call.GetString())
@@ -263,6 +263,7 @@ func (pl *TeaProgressWindowLander) init() *TeaProgressWindowLander {
 		}
 
 		teabox.GetTeaboxApp().Draw()
+		return ""
 	}
 
 	return pl
@@ -310,7 +311,7 @@ func (pl *TeaProgressWindowLander) AsWidgetPrimitive() crtview.Primitive {
 
 // Return window receiver action on Unix socket calls, specific per this widget.
 // This action is called by Unix socket among others, and it picks up stuff that are needed.
-func (pl *TeaProgressWindowLander) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) {
+func (pl *TeaProgressWindowLander) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) string {
 	return pl.action
 }
 

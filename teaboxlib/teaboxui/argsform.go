@@ -56,8 +56,8 @@ func (tfp *TeaFormsPanel) GetLandingPage() teawidgets.TeaboxLandingWindow {
 }
 
 // GetFormsSocketListerActions returns all actions from all forms
-func (tfp *TeaFormsPanel) GetFormsSocketListenerActions() []func(*teaboxlib.TeaboxAPICall) {
-	actions := []func(*teaboxlib.TeaboxAPICall){}
+func (tfp *TeaFormsPanel) GetFormsSocketListenerActions() []func(*teaboxlib.TeaboxAPICall) string {
+	actions := []func(*teaboxlib.TeaboxAPICall) string{}
 	for _, ref := range tfp.objref {
 		form, ok := ref.(*teawidgets.TeaboxArgsMainWindow)
 		if !ok {
@@ -78,7 +78,7 @@ func (tfp *TeaFormsPanel) StartListener() error {
 	tfp.landingPage.Reset()
 	teabox.GetTeaboxApp().GetCallbackServer().
 		AddLocalAction(tfp.landingPage.GetWindowAction()).
-		AddLocalAction(func(c *teaboxlib.TeaboxAPICall) {
+		AddLocalAction(func(c *teaboxlib.TeaboxAPICall) string {
 			modId := path.Base(tfp.moduleConfig.GetModulePath())
 			switch c.GetClass() {
 			case "session.set":
@@ -92,6 +92,8 @@ func (tfp *TeaFormsPanel) StartListener() error {
 			case "session.flush":
 				teabox.GetTeaboxApp().GetSession().Flush(modId)
 			}
+
+			return ""
 		})
 
 	// Run the Unix server instance

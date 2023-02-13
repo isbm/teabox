@@ -3,7 +3,6 @@ package teaboxlib
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"time"
@@ -12,17 +11,17 @@ import (
 type TeaboxSocketListener struct {
 	addr    string
 	conn    net.Listener
-	actions []func(*TeaboxAPICall)
+	actions []func(*TeaboxAPICall) string
 }
 
 func NewTeaboxSocketListener(pth string) *TeaboxSocketListener {
 	tsl := new(TeaboxSocketListener)
 	tsl.addr = pth
-	tsl.actions = []func(*TeaboxAPICall){}
+	tsl.actions = []func(*TeaboxAPICall) string{}
 	return tsl
 }
 
-func (tsl *TeaboxSocketListener) AddActions(action ...func(*TeaboxAPICall)) *TeaboxSocketListener {
+func (tsl *TeaboxSocketListener) AddActions(action ...func(*TeaboxAPICall) string) *TeaboxSocketListener {
 	tsl.actions = append(tsl.actions, action...)
 	return tsl
 }
@@ -88,19 +87,19 @@ This server also registers new listeners in Start(path).
 type TeaboxSocketServer struct {
 	mtx           bool
 	listener      *TeaboxSocketListener
-	localActions  []func(*TeaboxAPICall)
-	globalActions []func(*TeaboxAPICall)
+	localActions  []func(*TeaboxAPICall) string
+	globalActions []func(*TeaboxAPICall) string
 }
 
 func NewTeaboxSocketServer() *TeaboxSocketServer {
 	tss := new(TeaboxSocketServer)
-	tss.localActions = []func(*TeaboxAPICall){}
-	tss.globalActions = []func(*TeaboxAPICall){}
+	tss.localActions = []func(*TeaboxAPICall) string{}
+	tss.globalActions = []func(*TeaboxAPICall) string{}
 	return tss
 }
 
 // AddLocalActions are actions that are added per a specific widget implementation. They define their specific APIs.
-func (tss *TeaboxSocketServer) AddLocalAction(actions ...func(call *TeaboxAPICall)) *TeaboxSocketServer {
+func (tss *TeaboxSocketServer) AddLocalAction(actions ...func(call *TeaboxAPICall) string) *TeaboxSocketServer {
 	for {
 		if !tss.mtx {
 			break
@@ -126,7 +125,7 @@ func (tss *TeaboxSocketServer) AddLocalAction(actions ...func(call *TeaboxAPICal
 // AddGlobalAction adds an action to the Unix socket server, that will be persisting per entire instance.
 // This action is accessed by all forms at all runtime span. This is useful at application start to define
 // all common actions.
-func (tss *TeaboxSocketServer) AddGlobalAction(action func(*TeaboxAPICall)) *TeaboxSocketServer {
+func (tss *TeaboxSocketServer) AddGlobalAction(action func(*TeaboxAPICall) string) *TeaboxSocketServer {
 	tss.globalActions = append(tss.globalActions, action)
 	return tss
 }
@@ -153,7 +152,7 @@ func (tss *TeaboxSocketServer) Start(pth string) error {
 func (tss *TeaboxSocketServer) Stop() error {
 	defer func() {
 		tss.listener = nil
-		tss.localActions = []func(*TeaboxAPICall){}
+		tss.localActions = []func(*TeaboxAPICall) string{}
 	}()
 	if err := tss.listener.Terminate(); err != nil {
 		return err

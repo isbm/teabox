@@ -28,7 +28,7 @@ type TeaboxLandingWindow interface {
 	StopListener() error
 
 	// Return window action on Unix socket calls, specific per this widget
-	GetWindowAction() func(call *teaboxlib.TeaboxAPICall)
+	GetWindowAction() func(call *teaboxlib.TeaboxAPICall) string
 
 	// Reset all the values to the initial state
 	Reset()

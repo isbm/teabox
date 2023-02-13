@@ -341,8 +341,8 @@ func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error
 	return nil
 }
 
-func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) {
-	return func(call *teaboxlib.TeaboxAPICall) {
+func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) string {
+	return func(call *teaboxlib.TeaboxAPICall) string {
 		switch call.GetClass() {
 
 		// Overwriting with the new values
@@ -369,6 +369,7 @@ func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxA
 		case teaboxlib.FORM_CLR_TABLE_BY_ORD:
 			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_SET)
 		}
+		return ""
 	}
 }
 
