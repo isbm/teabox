@@ -28,6 +28,7 @@ type TeaboxArgsMainWindow struct {
 	labeledArg             map[string]*teaboxlib.TeaConfModArg // map of label to arg object pointer. Used to find argument name by label (same as FormItem)
 	namedArg               map[string]*teaboxlib.TeaConfModArg
 	skipLoad               bool
+	confModCommand         *teaboxlib.TeaConfModCommand
 
 	*crtview.Form
 }
@@ -193,7 +194,8 @@ func (tmw *TeaboxArgsMainWindow) GetCommandArguments(formid string) []string {
 
 // AddArgWidgets adds actual widgets for each argument
 func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand) {
-	for _, a := range cmd.GetArguments() {
+	tmw.confModCommand = cmd
+	for _, a := range tmw.confModCommand.GetArguments() {
 		tmw.namedArg[a.GetArgName()] = a
 		tmw.labeledArg[a.GetWidgetLabel()] = a
 		switch a.GetWidgetType() {
@@ -320,18 +322,27 @@ func (tmw *TeaboxArgsMainWindow) AddCheckBox(arg *teaboxlib.TeaConfModArg) error
 	}
 
 	tmw.Form.AddCheckBox(arg.GetWidgetLabel(), "", state, func(checked bool) {
+		sig := teaboxlib.NewSigCall(tmw.confModCommand)
 		if checked {
+			// Add argument notification
 			tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
+
+			// Add selected signal
+			sig.CallSignal(arg.GetSignals().GetSignalValue("selected"))
 		} else {
+			// Remove argument notification
 			tmw.RemoveArgument(tmw.GetId(), arg.GetArgName())
+
+			// Add unselected signal
+			sig.CallSignal(arg.GetSignals().GetSignalValue("deselected"))
 		}
 	})
 
 	return nil
 }
 
-func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) {
-	return func(call *teaboxlib.TeaboxAPICall) {
+func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) string {
+	return func(call *teaboxlib.TeaboxAPICall) string {
 		switch call.GetClass() {
 
 		// Overwriting with the new values
@@ -358,6 +369,7 @@ func (tmw *TeaboxArgsMainWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxA
 		case teaboxlib.FORM_CLR_TABLE_BY_ORD:
 			tmw.updateField(call, tmw.GetFormItem(call.GetKeyAsInt()), __OP_W_SET)
 		}
+		return ""
 	}
 }
 
@@ -378,7 +390,7 @@ func (tmw *TeaboxArgsMainWindow) updateField(call *teaboxlib.TeaboxAPICall, item
 
 	case *crtview.CheckBox:
 		if op != __OP_W_CLR {
-			field.SetChecked(call.GetBool())
+			field.SetChecked(call.GetBool()) // This does NOT triggers onChange hook!
 			if call.GetBool() {
 				tmw.AddArgument(tmw.GetId(), arg.GetArgName(), arg.GetOptions()[0].GetLabel())
 			} else {

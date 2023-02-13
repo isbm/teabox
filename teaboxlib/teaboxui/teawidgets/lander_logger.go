@@ -17,7 +17,7 @@ It is used to show the output of a called script.
 */
 
 type TeaLoggerWindowLander struct {
-	action    func(call *teaboxlib.TeaboxAPICall)
+	action    func(call *teaboxlib.TeaboxAPICall) string
 	statusBar *crtview.TextView
 	titleBar  *crtview.TextView
 	w         *crtview.TextView
@@ -60,7 +60,7 @@ func NewTeaLoggerWindowLander() *TeaLoggerWindowLander {
 	c.AddItem(c.statusBar, 1, 0, false)
 
 	// Action definition
-	c.action = func(call *teaboxlib.TeaboxAPICall) {
+	c.action = func(call *teaboxlib.TeaboxAPICall) string {
 		switch call.GetClass() {
 		case teaboxlib.LOGGER_STATUS:
 			c.statusBar.SetText(call.GetString())
@@ -68,6 +68,7 @@ func NewTeaLoggerWindowLander() *TeaLoggerWindowLander {
 			c.titleBar.SetText(call.GetString())
 		}
 		teabox.GetTeaboxApp().Draw()
+		return ""
 	}
 
 	c.Reset()
@@ -91,7 +92,7 @@ func (tsw *TeaLoggerWindowLander) GetWindow() *crtview.TextView {
 	return tsw.w
 }
 
-func (tsw *TeaLoggerWindowLander) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) {
+func (tsw *TeaLoggerWindowLander) GetWindowAction() func(call *teaboxlib.TeaboxAPICall) string {
 	return tsw.action
 }
 

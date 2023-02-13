@@ -20,6 +20,7 @@ var __MSG_REF string
 type TeaboxApplication struct {
 	callback *teaboxlib.TeaboxSocketServer
 	config   *teaboxlib.TeaConf
+	session  *teaboxlib.TeaboxRuntimeSession
 
 	*crtview.Application
 }
@@ -33,6 +34,11 @@ func (ta *TeaboxApplication) GetCallbackServer() *teaboxlib.TeaboxSocketServer {
 func (ta *TeaboxApplication) SetGlobalConfig(conf *teaboxlib.TeaConf) *TeaboxApplication {
 	ta.config = conf
 	return ta
+}
+
+// GetSession instance
+func (ta *TeaboxApplication) GetSession() *teaboxlib.TeaboxRuntimeSession {
+	return ta.session
 }
 
 // GetGlobalConfig of the application
@@ -53,6 +59,7 @@ func GetTeaboxApp() *TeaboxApplication {
 		__APP_REF = &TeaboxApplication{
 			Application: crtview.NewApplication(),
 			callback:    teaboxlib.NewTeaboxSocketServer(),
+			session:     teaboxlib.NewTeaboxRuntimeSession(),
 		}
 	}
 	return __APP_REF

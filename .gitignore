@@ -1,0 +1,7 @@
+.gitignore
+.vscode*
+cmd/teabox
+cmd/teabox.conf
+example/modules/hv/
+docs/_*
+.#*

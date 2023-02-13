@@ -119,10 +119,10 @@ func (ld *TeaboxArgsLoadingWindow) Reset() {
 }
 
 // GetSocketAcceptAction is a function for Unix socket on action
-func (ld *TeaboxArgsLoadingWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) {
-	return func(call *teaboxlib.TeaboxAPICall) {
+func (ld *TeaboxArgsLoadingWindow) GetSocketAcceptAction() func(*teaboxlib.TeaboxAPICall) string {
+	return func(call *teaboxlib.TeaboxAPICall) string {
 		if !ld.IsVisible() {
-			return // Don't update here anything, we are invisible
+			return "" // Don't update here anything, we are invisible
 		}
 		switch call.GetClass() {
 		case teaboxlib.INIT_SET_PROGRESS:
@@ -138,6 +138,7 @@ func (ld *TeaboxArgsLoadingWindow) GetSocketAcceptAction() func(*teaboxlib.Teabo
 		}
 
 		teabox.GetTeaboxApp().Draw()
+		return ""
 	}
 }
 

@@ -20,6 +20,13 @@ else
 		setup
 		break
 		;;
+	    --do-something-when-checked)
+		api session.set "{test}John Smith"
+		break
+		;;
+	    --do-something-when-is-not-checked)
+		break
+		;;
             *)
 		run $@
 		break

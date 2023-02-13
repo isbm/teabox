@@ -63,6 +63,11 @@ func NewTeaConf(appname string) (*TeaConf, error) {
 	return tc, nil
 }
 
+// GetContentPath returns root path to all modules
+func (tc *TeaConf) GetContentPath() string {
+	return tc.contentPath
+}
+
 func (tc *TeaConf) GetTitle() string {
 	return tc.title
 }

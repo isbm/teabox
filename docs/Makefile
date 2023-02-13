@@ -12,6 +12,10 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+setup:
+	sudo apt install pip gcc g++
+	pip install sphinx myst_parser karma-sphinx-theme
+
 .PHONY: help Makefile
 
 # Catch-all target: route all unknown targets to Sphinx using the new
