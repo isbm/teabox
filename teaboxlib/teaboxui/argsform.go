@@ -84,9 +84,13 @@ func (tfp *TeaFormsPanel) StartListener() error {
 			case "session.set":
 				teabox.GetTeaboxApp().GetSession().Set(modId, c.GetKey(), c.GetValue())
 			case "session.get":
-				// XXX: Implement getting data. This should be also writer not just listener in the socket
+				r := teabox.GetTeaboxApp().GetSession().Get(modId, c.GetKey())
+				teabox.GetTeaboxApp().GetSession()
+				if r != nil {
+					return fmt.Sprintf("%v", r)
+				}
 			case "session.keys":
-				// XXX: Implement getting data. This should be also writer not just listener in the socket
+				return strings.Join(teabox.GetTeaboxApp().GetSession().Keys(modId), ",")
 			case "session.delete":
 				teabox.GetTeaboxApp().GetSession().Delete(modId, c.GetString())
 			case "session.flush":
