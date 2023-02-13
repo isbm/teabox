@@ -51,7 +51,10 @@ func (rts *TeaboxRuntimeSession) Keys(modname string) []string {
 	keys := []string{}
 	for k := range rts.kws {
 		if strings.HasPrefix(k, modname+"-") || strings.HasPrefix(k, ":") {
-			keys = append(keys, k[len(modname):])
+			k = k[len(modname)+1:]
+			if k != "" {
+				keys = append(keys, k)
+			}
 		}
 	}
 
