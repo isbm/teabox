@@ -53,19 +53,27 @@ func (tsl *TeaboxSocketListener) Start() error {
 		}
 
 		// Go over all registered calls and send them the API instruction calls
-		go func() {
-			var call *TeaboxAPICall
-			var data string
-
-			buff := bytes.NewBufferString(data)
-			if _, err := io.Copy(buff, bind); err == nil {
-				call = NewTeaboxAPICall(buff.Bytes())
+		go func(c net.Conn) {
+			buff := bytes.NewBuffer(nil)
+			chunk := make([]byte, 0xff)
+			for {
+				buffLen, _ := c.Read(chunk)
+				if buffLen > 0 {
+					buff.Write(chunk[:buffLen])
+				} else {
+					break
+				}
 			}
+
+			call := NewTeaboxAPICall(buff.Bytes())
 
 			for _, a := range tsl.actions {
-				a(call)
+				if ret := a(call); ret != "" {
+					c.Write([]byte(fmt.Sprintf("%s:%s\n", call.GetClass(), ret)))
+				}
 			}
-		}()
+
+		}(bind)
 	}
 
 	return nil
