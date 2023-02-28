@@ -25,6 +25,7 @@ type TeaConf struct {
 	contentPath        string
 	initConfPath       string
 	callbackSocketPath string
+	rootConf           *nanoconf.Config
 
 	modIndex []TeaConfComponent
 	wzlib_logger.WzLogger
@@ -32,7 +33,6 @@ type TeaConf struct {
 
 func NewTeaConf(appname string) (*TeaConf, error) {
 	tc := new(TeaConf)
-	tc.modIndex = []TeaConfComponent{}
 
 	configFileName := fmt.Sprintf("%s.conf", appname)
 	configPath := configFileName
@@ -43,24 +43,24 @@ func NewTeaConf(appname string) (*TeaConf, error) {
 		}
 	}
 
-	cfg := nanoconf.NewConfig(configPath)
-
-	tc.contentPath = cfg.Root().String("content", "")
-	tc.callbackSocketPath = cfg.Root().String("callback", "")
+	tc.rootConf = nanoconf.NewConfig(configPath)
+	tc.contentPath = tc.GetRootConfig().Root().String("content", "")
+	tc.callbackSocketPath = tc.GetRootConfig().Root().String("callback", "")
 	tc.initConfPath = path.Join(tc.contentPath, "init.conf")
 
-	environ, exists := cfg.Root().Raw()["env"]
+	environ, exists := tc.GetRootConfig().Root().Raw()["env"]
 	if exists {
 		for envKey, envVar := range environ.(map[interface{}]interface{}) {
 			os.Setenv(fmt.Sprintf("%v", envKey), fmt.Sprintf("%v", envVar))
 		}
 	}
 
-	if err := tc.initConfig(); err != nil {
-		return nil, fmt.Errorf("unable to initialise modules: %s", err)
-	}
-
 	return tc, nil
+}
+
+// GetRootConfig returns a root configuration of the application
+func (tc *TeaConf) GetRootConfig() *nanoconf.Config {
+	return tc.rootConf
 }
 
 // GetContentPath returns root path to all modules
@@ -93,7 +93,13 @@ func (tc *TeaConf) getGroup(id string) TeaConfComponent {
 	return c
 }
 
-func (tc *TeaConf) initConfig() error {
+func (tc *TeaConf) InitConfig() error {
+	if tc.modIndex != nil {
+		return fmt.Errorf("config already initalised")
+	}
+
+	tc.modIndex = []TeaConfComponent{}
+
 	for _, p := range []string{tc.initConfPath, tc.contentPath} {
 		_, err := os.Stat(p)
 		if os.IsNotExist(err) {

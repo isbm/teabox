@@ -28,6 +28,15 @@ func main() {
 
 	defer os.Remove(conf.GetSocketPath())
 
+	// Setup app
+	teaboxlib.NewUiConfig().Setup(conf)
+
+	if err := conf.InitConfig(); err != nil {
+		fmt.Printf("Error: unable to initialise modules: %s", err)
+		os.Exit(1)
+	}
+
+	// Init app
 	app := teabox.GetTeaboxApp().SetGlobalConfig(conf)
 	app.SetRoot(teaboxui.InitTeaboxMainWindow().GetContent(), true)
 
