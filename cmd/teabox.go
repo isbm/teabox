@@ -10,7 +10,7 @@ import (
 	"gitlab.com/isbm/teabox/teaboxlib/teaboxui"
 )
 
-var VERSION = "0.1"
+var VERSION = "0.3"
 
 func main() {
 	if os.Getenv("TERM") != "xterm-256color" {

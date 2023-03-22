@@ -13,7 +13,7 @@
 # published by the Open Source Initiative.
 
 Name:           teabox
-Version:        0.1
+Version:        0.3
 Release:        0
 Summary:        It is like a whiptail on steroids to make configuration consoles
 License:        MIT
