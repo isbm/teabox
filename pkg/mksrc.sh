@@ -3,7 +3,7 @@
 # Configuration
 P_NAME="teabox"
 P_APP="cmd/$P_NAME.go"
-P_SRC_DIRS=("cmd" "teaboxlib" "teaboxlib/teaboxui" "teaboxlib/teaboxui/teawidgets")
+P_SRC_DIRS=("cmd" "teaboxlib" "teaboxlib/teaconditions" "teaboxlib/teaboxui" "teaboxlib/teaboxui/teawidgets")
 P_DOC_DIRS=("docs")
 P_FILES=("LICENCE.md" "README.md" "go.mod" "go.sum" "Makefile")
 P_CMD=("teabox.conf")
