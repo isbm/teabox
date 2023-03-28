@@ -1,5 +1,10 @@
-# Where to find all modules
-content: /home/bo/work/teabox/example
+# Where to find all modules.
+# To start it first, modify the path below,
+# so you have it $YOURPATH/teabox/example
+# Yes, it should be absolute.
+content: /full/path/to/the/teabox/example
+
+# Default callback location
 callback: /tmp/teabox.sock
 
 # Environment, which applies to all modules
