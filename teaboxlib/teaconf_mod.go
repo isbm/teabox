@@ -268,6 +268,10 @@ func (tmc *TeaConfModCommand) parse(cmd map[interface{}]interface{}) *TeaConfMod
 			switch sk {
 			case "path":
 				tmc.path = sv
+				if tmc.path == "" {
+					failed = "No target executable defined"
+					break
+				}
 			case "title":
 				tmc.title = sv
 			case "option":
