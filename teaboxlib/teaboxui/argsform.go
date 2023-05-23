@@ -2,6 +2,7 @@ package teaboxui
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -235,6 +236,14 @@ func (taf *TeaboxArgsForm) ShowModuleForm(id string) {
 				cmd = path.Join(formsPanel.GetModuleConfig().GetModulePath(), formsPanel.GetModuleConfig().GetSetupCommand())
 			} else {
 				cmd = formsPanel.GetModuleConfig().GetSetupCommand()
+			}
+
+			// Skip load if the loader path is not exectuable.
+			// This is a module problem and can be caused by various reasons: bad packaging, misaligned deployment etc
+			statfo, err := os.Stat(cmd)
+			if (err != nil) || (statfo.Mode()&0111 == 0) {
+				loader.SkipLoad()
+				return
 			}
 
 			// Skip loader if conditions are not met
