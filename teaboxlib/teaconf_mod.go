@@ -192,9 +192,11 @@ func NewTeaConfModArg(args map[interface{}]interface{}) *TeaConfModArg {
 		a.GetLogger().Debug(spew.Sdump(args))
 		os.Exit(1)
 	} else if a.name == "" {
-		a.GetLogger().Error("No name found for argument.")
-		a.GetLogger().Debug(spew.Sdump(args))
-		os.Exit(1)
+		if a.argtype != "info" {
+			a.GetLogger().Error("No name found for argument.")
+			a.GetLogger().Debug(spew.Sdump(args))
+			os.Exit(1)
+		}
 	}
 
 	return a

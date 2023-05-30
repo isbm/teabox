@@ -3,7 +3,9 @@ package teawidgets
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -209,11 +211,36 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 			tmw.AddTabularField(a)
 		case "password", "masked":
 			tmw.AddPasswordField(a)
+		case "info":
+			tmw.AddInfoTextField(cmd.GetCommandPath(), a)
 		default:
 			fmt.Printf("Module config error: Unknown widget definition \"%s\" for command argument \"%s\" at %s\n", a.GetWidgetType(), cmd.GetTitle(), cmd.GetCommandPath())
 			os.Exit(1)
 		}
 	}
+}
+
+func (tmw *TeaboxArgsMainWindow) AddInfoTextField(cmdpath string, arg *teaboxlib.TeaConfModArg) error {
+	var msg string = "Error: Data not found"
+	for _, opt := range arg.GetOptions() {
+		if opt.GetType() == "file" && opt.GetValue() != nil {
+			fp := opt.GetValueAsString()
+			if !strings.HasPrefix(fp, "/") {
+				fp = path.Join(path.Dir(cmdpath), fp)
+			}
+			data, err := ioutil.ReadFile(fp)
+			if err != nil {
+				msg = "Error: " + err.Error()
+			} else {
+				msg = string(data)
+			}
+			break
+		}
+	}
+
+	tmw.Form.AddFormItem(crtview.NewInfoText(msg))
+
+	return nil
 }
 
 // AddTabularFiled adds a list of tabular data. This is a complex field that has multiple columns.
