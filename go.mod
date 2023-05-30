@@ -6,7 +6,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/infra-whizz/wzlib v0.0.0-20210306212611-2af49aea1704
-	github.com/isbm/crtview v1.6.3-0.20230322152056-59431d61e00c
+	github.com/isbm/crtview v1.6.3-0.20230530153538-5cae141c17c3
 	//github.com/isbm/crtview v1.6.2
 	github.com/isbm/go-nanoconf v0.0.0-20210917204429-663038ee6e05
 	github.com/karrick/godirwalk v1.17.0
@@ -27,9 +27,9 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	gitlab.com/tslocum/cbind v0.1.4 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
