@@ -359,7 +359,7 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) error {
 				formPanel.ShowLandingWindow(mod.GetLandingPageType())
 				go func() {
 					// Run command on the landing window
-					var panelPtr string = "_info-popup"
+					var panelPtr = "_info-popup"
 					var alert *crtwin.ModalDialog
 					modcmd := taf.modCmdIndex[f.GetId()]
 					if err := formPanel.GetLandingPage().Action(modcmd.GetCommandPath(), f.GetCommandArguments(f.GetId())...); err != nil {

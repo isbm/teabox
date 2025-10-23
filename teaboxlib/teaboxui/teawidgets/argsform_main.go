@@ -221,7 +221,7 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 }
 
 func (tmw *TeaboxArgsMainWindow) AddInfoTextField(cmdpath string, arg *teaboxlib.TeaConfModArg) error {
-	var msg string = "Error: Data not found"
+	var msg = "Error: Data not found"
 	for _, opt := range arg.GetOptions() {
 		if opt.GetType() == "file" && opt.GetValue() != nil {
 			fp := opt.GetValueAsString()
@@ -300,7 +300,7 @@ func (tmw *TeaboxArgsMainWindow) AddDropDownSimple(arg *teaboxlib.TeaConfModArg)
 }
 
 /*
-Text could have only one argument as a default text:
+AddInputField Text could have only one argument as a default text:
 
 	[DEFAULT_TEXT]
 
@@ -324,7 +324,7 @@ func (tmw *TeaboxArgsMainWindow) AddInputField(arg *teaboxlib.TeaConfModArg) err
 }
 
 func (tmw *TeaboxArgsMainWindow) AddPasswordField(arg *teaboxlib.TeaConfModArg) error {
-	var val string = ""
+	var val = ""
 	if len(arg.GetOptions()) > 0 {
 		val = arg.GetOptions()[0].GetValueAsString()
 	}
