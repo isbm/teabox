@@ -47,7 +47,7 @@ func (uic *UiConfig) setCommon() *UiConfig {
 // Set labels
 func (uic *UiConfig) setLabels() *UiConfig {
 	s := uic.tc.GetRootConfig().Find("ui:widgets")
-	for _, k := range []string{"label-back", "label-exit", "label-sep", "label-more"} {
+	for _, k := range []string{"label-back", "label-exit", "label-sep", "label-more", "label-tabular-selected"} {
 		l := s.String(k, "")
 		if l == "" {
 			continue
@@ -62,6 +62,8 @@ func (uic *UiConfig) setLabels() *UiConfig {
 			LABEL_SEP = l
 		case "label-more":
 			LABEL_MORE = l
+		case "label-tabular-selected":
+			LABEL_TABULAR_SELECTED = l
 		}
 	}
 

@@ -14,6 +14,7 @@ var LABEL_BACK = "◀ Back"
 var LABEL_EXIT = "Exit ▶"
 var LABEL_SEP = "─"
 var LABEL_MORE = "…"
+var LABEL_TABULAR_SELECTED = " ◆ "
 
 // Colors theme
 var WORKSPACE_BACKGROUND = EGAColorGreen

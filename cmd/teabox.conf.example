@@ -23,6 +23,7 @@ ui:
     label-exit: "Exit ▶"
     label-sep: "─"
     label-more: "..."
+    label-tabular-selected: " ✅ "
 
   colors:
     # Values are 'default' (or omitted at all), or hexadecimal RGB: 0xRRGGBB

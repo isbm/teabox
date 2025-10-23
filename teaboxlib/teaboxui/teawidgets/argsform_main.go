@@ -270,6 +270,7 @@ func (tmw *TeaboxArgsMainWindow) AddTabularField(arg *teaboxlib.TeaConfModArg) e
 	tabular.SetSelectedFunc(func(row, column int) {
 		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), tabular.GetValueAt(row-1))
 	})
+	tabular.SetMarkerIcon(teaboxlib.LABEL_TABULAR_SELECTED)
 	tabular.Select(1, 1)
 	tmw.Form.AddFormItem(tabular)
 
