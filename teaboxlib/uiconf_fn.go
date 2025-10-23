@@ -1,3 +1,4 @@
+// Package teaboxlib : UI configuration functions
 package teaboxlib
 
 import (
@@ -20,7 +21,17 @@ func NewUiConfig() *UiConfig {
 // Setup configuration
 func (uic *UiConfig) Setup(conf *TeaConf) *UiConfig {
 	uic.tc = conf
-	return uic.setLabels().setWorkspace().setMenu().setForms().setCommon()
+	return uic.setLabels().setWorkspace().setMenu().setForms().setCommon().setLogFilename()
+}
+
+func (uic *UiConfig) setLogFilename() *UiConfig {
+	s := uic.tc.GetRootConfig().Find("ui:system")
+	f := s.String("log-filename", "")
+	if f != "" {
+		LOG_FILENAME = f
+	}
+
+	return uic
 }
 
 func (uic *UiConfig) setCommon() *UiConfig {

@@ -32,3 +32,6 @@ var MENU_ITEM = EGAColorDarkGray
 
 var FORM_BORDER_SELECTED = EGAColorBrightWhite
 var FORM_BORDER = EGAColorBrightGreen
+
+// Logs
+var LOG_FILENAME = "/var/log/teabox.log"
