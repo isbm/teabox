@@ -6,8 +6,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/infra-whizz/wzlib v0.0.0-20210306212611-2af49aea1704
-	github.com/isbm/crtview v1.6.3-0.20251023140000-54778ddac4b6
-	//github.com/isbm/crtview v1.6.2
+	github.com/isbm/crtview v1.6.3-0.20251023151121-8dacb8cc566f
 	github.com/isbm/go-nanoconf v0.0.0-20210917204429-663038ee6e05
 	github.com/karrick/godirwalk v1.17.0
 )
@@ -33,4 +32,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-//replace github.com/isbm/crtview v1.6.2 => /home/bo/work/crtview
+//replace github.com/isbm/crtview => /home/boma6672/work/crtview
