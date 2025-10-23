@@ -61,6 +61,7 @@ func (tco *TeaConfCmdOption) Parse(option interface{}) error {
 	case 2:
 		tokens = append([]string{""}, tokens...)
 	case 3:
+		// noop
 	default:
 		return fmt.Errorf("unknown format to the option: %v", option)
 	}
