@@ -204,7 +204,7 @@ func (uic *UiConfig) getColor(in interface{}) *tcell.Color {
 		if len(s) > 6 {
 			return nil
 		}
-		hex6 = strings.ToLower(fmt.Sprintf("%06s", s))
+		hex6 = strings.ToLower(strings.Repeat("0", 6-len(s)) + s)
 	}
 
 	// parse rr, gg, bb
