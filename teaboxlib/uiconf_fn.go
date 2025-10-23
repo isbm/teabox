@@ -122,7 +122,9 @@ func (uic *UiConfig) setForms() *UiConfig {
 	s := uic.tc.GetRootConfig().Find("ui:colors")
 	for _, k := range []string{
 		"button-background", "button-background-selected", "button-foreground",
-		"button-foreground-selected", "border", "border-selected"} {
+		"button-foreground-selected", "border", "border-selected",
+		"form-field-background-focused", "form-field-foreground-focused",
+	} {
 		if strings.ToLower(s.String(k, "")) != "default" && s.String(k, "") != "" {
 			c := uic.getColor(s.Raw()[k])
 			if c == nil {
@@ -142,6 +144,10 @@ func (uic *UiConfig) setForms() *UiConfig {
 				FORM_BORDER = *c
 			case "border-selected":
 				FORM_BORDER_SELECTED = *c
+			case "form-field-background-focused":
+				FORM_BACKGROUND_COLOR_FOCUSED = *c
+			case "form-field-foreground-focused":
+				FORM_FIELD_TEXT = *c
 			}
 		}
 	}
