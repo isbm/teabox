@@ -59,8 +59,8 @@ func (tmw *TeaboxArgsMainWindow) init() *TeaboxArgsMainWindow {
 	tmw.SetBackgroundColor(teaboxlib.WORKSPACE_BACKGROUND)
 	tmw.SetFieldTextColor(tcell.ColorBlack.TrueColor())
 	tmw.SetFieldBackgroundColor(teaboxlib.WORKSPACE_HEADER)
-	tmw.SetFieldBackgroundColorFocused(tcell.ColorGreenYellow)
-	tmw.SetFieldTextColorFocused(tcell.ColorBlack.TrueColor())
+	tmw.SetFieldBackgroundColorFocused(teaboxlib.FORM_BACKGROUND_COLOR_FOCUSED)
+	tmw.SetFieldTextColorFocused(teaboxlib.FORM_FIELD_TEXT)
 
 	// Buttons align
 	tmw.SetButtonsAlign(crtview.AlignRight)
@@ -221,7 +221,7 @@ func (tmw *TeaboxArgsMainWindow) AddArgWidgets(cmd *teaboxlib.TeaConfModCommand)
 }
 
 func (tmw *TeaboxArgsMainWindow) AddInfoTextField(cmdpath string, arg *teaboxlib.TeaConfModArg) error {
-	var msg string = "Error: Data not found"
+	var msg = "Error: Data not found"
 	for _, opt := range arg.GetOptions() {
 		if opt.GetType() == "file" && opt.GetValue() != nil {
 			fp := opt.GetValueAsString()
@@ -290,14 +290,17 @@ func (tmw *TeaboxArgsMainWindow) AddDropDownSimple(arg *teaboxlib.TeaConfModArg)
 		return fmt.Errorf("list \"%s\" in command \"%s\" of module \"%s\" has no values", arg.GetWidgetLabel(), tmw.subtitle, tmw.title)
 	}
 
-	tmw.Form.AddDropDownSimple(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
+	dd := tmw.Form.AddDropDownDetached(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
 		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
 	}, opts...)
+	dd.GetListObject().SetBackgroundColor(teaboxlib.FORM_FIELD_BACKGROUND_DARKER)
+	tmw.Form.AddFormItem(dd)
+
 	return nil
 }
 
 /*
-Text could have only one argument as a default text:
+AddInputField Text could have only one argument as a default text:
 
 	[DEFAULT_TEXT]
 
@@ -321,7 +324,7 @@ func (tmw *TeaboxArgsMainWindow) AddInputField(arg *teaboxlib.TeaConfModArg) err
 }
 
 func (tmw *TeaboxArgsMainWindow) AddPasswordField(arg *teaboxlib.TeaConfModArg) error {
-	var val string = ""
+	var val = ""
 	if len(arg.GetOptions()) > 0 {
 		val = arg.GetOptions()[0].GetValueAsString()
 	}

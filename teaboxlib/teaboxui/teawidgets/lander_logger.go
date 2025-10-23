@@ -105,7 +105,9 @@ func (tsw *TeaLoggerWindowLander) Action(cmdpath string, cmdargs ...string) erro
 
 	err := cmd.Run()
 	if err != nil {
-		teabox.AddToFile("eco-errors.log", fmt.Sprintf("Error: command \"%s %s\" quit as %s\nOutput: %s", cmdpath, strings.Join(cmdargs, " "), err.Error(), buf.String()))
+		teabox.AddToFile(teaboxlib.LOG_FILENAME,
+			fmt.Sprintf("Error: command \"%s %s\" quit as %s\nOutput: %s",
+				cmdpath, strings.Join(cmdargs, " "), err.Error(), buf.String()))
 		return fmt.Errorf(buf.String())
 	}
 

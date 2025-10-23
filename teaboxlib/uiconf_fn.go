@@ -1,3 +1,4 @@
+// Package teaboxlib : UI configuration functions
 package teaboxlib
 
 import (
@@ -20,7 +21,17 @@ func NewUiConfig() *UiConfig {
 // Setup configuration
 func (uic *UiConfig) Setup(conf *TeaConf) *UiConfig {
 	uic.tc = conf
-	return uic.setLabels().setWorkspace().setMenu().setForms().setCommon()
+	return uic.setLabels().setWorkspace().setMenu().setForms().setCommon().setLogFilename()
+}
+
+func (uic *UiConfig) setLogFilename() *UiConfig {
+	s := uic.tc.GetRootConfig().Find("ui:system")
+	f := s.String("log-filename", "")
+	if f != "" {
+		LOG_FILENAME = f
+	}
+
+	return uic
 }
 
 func (uic *UiConfig) setCommon() *UiConfig {
@@ -110,8 +121,19 @@ func (uic *UiConfig) setMenu() *UiConfig {
 func (uic *UiConfig) setForms() *UiConfig {
 	s := uic.tc.GetRootConfig().Find("ui:colors")
 	for _, k := range []string{
-		"button-background", "button-background-selected", "button-foreground",
-		"button-foreground-selected", "border", "border-selected"} {
+		"button-background",
+		"button-background-selected",
+		"button-foreground",
+		"button-foreground-selected",
+
+		"border",
+		"border-selected",
+
+		"form-field-foreground-focused",
+		"form-field-background-focused",
+		"form-field-background",
+		"form-field-background-darker",
+	} {
 		if strings.ToLower(s.String(k, "")) != "default" && s.String(k, "") != "" {
 			c := uic.getColor(s.Raw()[k])
 			if c == nil {
@@ -131,6 +153,14 @@ func (uic *UiConfig) setForms() *UiConfig {
 				FORM_BORDER = *c
 			case "border-selected":
 				FORM_BORDER_SELECTED = *c
+			case "form-field-background-focused":
+				FORM_BACKGROUND_COLOR_FOCUSED = *c
+			case "form-field-foreground-focused":
+				FORM_FIELD_TEXT = *c
+			case "form-field-background":
+				FORM_FIELD_BACKGROUND = *c
+			case "form-field-background-darker":
+				FORM_FIELD_BACKGROUND_DARKER = *c
 			}
 		}
 	}
@@ -149,33 +179,48 @@ func (uic *UiConfig) setForms() *UiConfig {
 //		 - 0xaabbcc
 //		 - 0xAABBCC
 func (uic *UiConfig) getColor(in interface{}) *tcell.Color {
-	var data string
-	_, ok := in.(int)
-	if ok {
-		data = "0x" + strconv.FormatInt(int64(in.(int)), 16)
-	} else {
-		data = fmt.Sprintf("%v", in)
+	var hex6 string
+
+	switch v := in.(type) {
+	case nil:
+		return nil
+	case int:
+		hex6 = fmt.Sprintf("%06x", v&0xFFFFFF)
+	case int64:
+		hex6 = fmt.Sprintf("%06x", int(v)&0xFFFFFF)
+	case uint64:
+		hex6 = fmt.Sprintf("%06x", int(v)&0xFFFFFF)
+	case float64:
+		hex6 = fmt.Sprintf("%06x", int(v)&0xFFFFFF)
+	default:
+		s := strings.TrimSpace(fmt.Sprintf("%v", v))
+		if strings.EqualFold(s, "default") || s == "" {
+			return nil
+		}
+		// Accept "0xrrggbb" / "rrggbb"
+		if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+			s = s[2:]
+		}
+		if len(s) > 6 {
+			return nil
+		}
+		hex6 = strings.ToLower(strings.Repeat("0", 6-len(s)) + s)
 	}
 
-	if strings.ToLower(data) != "default" && len(data) == 8 {
-		r, e := strconv.ParseInt(data[2:4], 16, 64)
-		if e != nil {
-			return nil
-		}
-
-		g, e := strconv.ParseInt(data[4:6], 16, 64)
-		if e != nil {
-			return nil
-		}
-
-		b, e := strconv.ParseInt(data[6:8], 16, 64)
-		if e != nil {
-			return nil
-		}
-
-		c := tcell.NewRGBColor(int32(r), int32(g), int32(b))
-		return &c
+	// parse rr, gg, bb
+	r, err := strconv.ParseInt(hex6[0:2], 16, 64)
+	if err != nil {
+		return nil
+	}
+	g, err := strconv.ParseInt(hex6[2:4], 16, 64)
+	if err != nil {
+		return nil
+	}
+	b, err := strconv.ParseInt(hex6[4:6], 16, 64)
+	if err != nil {
+		return nil
 	}
 
-	return nil
+	c := tcell.NewRGBColor(int32(r), int32(g), int32(b))
+	return &c
 }

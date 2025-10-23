@@ -13,6 +13,10 @@ env:
 
 # Rebranding features to (re)define the UI colors
 ui:
+  # System-related settings
+  system:
+    log-filename: /var/log/teabox.log
+
   widgets:
     menu-width: 30
     label-back: "◀ Back"
@@ -55,6 +59,21 @@ ui:
 
     # FORM_BORDER
     border: default
+
+    # FORM_FIELD_BACKGROUND_FOCUSED
+    form-field-background-focused: default
+
+    # FORM_FIELD_TEXT_FOCUSED
+    form-field-foreground-focused: default
+
+    # FORM_FIELD_BACKGROUND
+    form-field-background: default
+
+    # FORM_FIELD_BACKGROUND_DARKER
+    form-field-background-darker: default
+
+    # FORM_FIELD_BACKGROUND_FOCUSED
+    form-field-background-focused: default
 
     # Menus
     # -----
