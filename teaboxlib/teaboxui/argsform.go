@@ -324,6 +324,9 @@ func (taf *TeaboxArgsForm) generateForms(c teaboxlib.TeaConfComponent) error {
 		f.SetButtonTextColor(teaboxlib.FORM_BUTTON_TEXT)
 		f.SetButtonTextColorFocused(teaboxlib.FORM_BUTTON_TEXT_SELECTED)
 
+		f.SetFieldBackgroundColorFocused(teaboxlib.FORM_FIELD_BACKGROUND_FOCUSED)
+		f.SetFieldBackgroundColor(teaboxlib.FORM_FIELD_BACKGROUND)
+
 		// Update relative path to its absolute
 		if !strings.HasPrefix(cmd.GetCommandPath(), "/") {
 			cmd.SetCommandPath(path.Join(mod.GetModulePath(), cmd.GetCommandPath()))

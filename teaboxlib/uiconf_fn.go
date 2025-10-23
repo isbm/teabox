@@ -121,9 +121,18 @@ func (uic *UiConfig) setMenu() *UiConfig {
 func (uic *UiConfig) setForms() *UiConfig {
 	s := uic.tc.GetRootConfig().Find("ui:colors")
 	for _, k := range []string{
-		"button-background", "button-background-selected", "button-foreground",
-		"button-foreground-selected", "border", "border-selected",
-		"form-field-background-focused", "form-field-foreground-focused",
+		"button-background",
+		"button-background-selected",
+		"button-foreground",
+		"button-foreground-selected",
+
+		"border",
+		"border-selected",
+
+		"form-field-foreground-focused",
+		"form-field-background-focused",
+		"form-field-background",
+		"form-field-background-darker",
 	} {
 		if strings.ToLower(s.String(k, "")) != "default" && s.String(k, "") != "" {
 			c := uic.getColor(s.Raw()[k])
@@ -148,6 +157,10 @@ func (uic *UiConfig) setForms() *UiConfig {
 				FORM_BACKGROUND_COLOR_FOCUSED = *c
 			case "form-field-foreground-focused":
 				FORM_FIELD_TEXT = *c
+			case "form-field-background":
+				FORM_FIELD_BACKGROUND = *c
+			case "form-field-background-darker":
+				FORM_FIELD_BACKGROUND_DARKER = *c
 			}
 		}
 	}

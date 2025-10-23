@@ -290,9 +290,12 @@ func (tmw *TeaboxArgsMainWindow) AddDropDownSimple(arg *teaboxlib.TeaConfModArg)
 		return fmt.Errorf("list \"%s\" in command \"%s\" of module \"%s\" has no values", arg.GetWidgetLabel(), tmw.subtitle, tmw.title)
 	}
 
-	tmw.Form.AddDropDownSimple(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
+	dd := tmw.Form.AddDropDownDetached(arg.GetWidgetLabel(), 0, func(index int, option *crtview.DropDownOption) {
 		tmw.AddArgument(tmw.GetId(), arg.GetArgName(), strings.TrimSpace(option.GetText()))
 	}, opts...)
+	dd.GetListObject().SetBackgroundColor(teaboxlib.FORM_FIELD_BACKGROUND_DARKER)
+	tmw.Form.AddFormItem(dd)
+
 	return nil
 }
 
