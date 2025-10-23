@@ -149,33 +149,48 @@ func (uic *UiConfig) setForms() *UiConfig {
 //		 - 0xaabbcc
 //		 - 0xAABBCC
 func (uic *UiConfig) getColor(in interface{}) *tcell.Color {
-	var data string
-	_, ok := in.(int)
-	if ok {
-		data = "0x" + strconv.FormatInt(int64(in.(int)), 16)
-	} else {
-		data = fmt.Sprintf("%v", in)
+	var hex6 string
+
+	switch v := in.(type) {
+	case nil:
+		return nil
+	case int:
+		hex6 = fmt.Sprintf("%06x", v&0xFFFFFF)
+	case int64:
+		hex6 = fmt.Sprintf("%06x", int(v)&0xFFFFFF)
+	case uint64:
+		hex6 = fmt.Sprintf("%06x", int(v)&0xFFFFFF)
+	case float64:
+		hex6 = fmt.Sprintf("%06x", int(v)&0xFFFFFF)
+	default:
+		s := strings.TrimSpace(fmt.Sprintf("%v", v))
+		if strings.EqualFold(s, "default") || s == "" {
+			return nil
+		}
+		// Accept "0xrrggbb" / "rrggbb"
+		if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+			s = s[2:]
+		}
+		if len(s) > 6 {
+			return nil
+		}
+		hex6 = strings.ToLower(fmt.Sprintf("%06s", s))
 	}
 
-	if strings.ToLower(data) != "default" && len(data) == 8 {
-		r, e := strconv.ParseInt(data[2:4], 16, 64)
-		if e != nil {
-			return nil
-		}
-
-		g, e := strconv.ParseInt(data[4:6], 16, 64)
-		if e != nil {
-			return nil
-		}
-
-		b, e := strconv.ParseInt(data[6:8], 16, 64)
-		if e != nil {
-			return nil
-		}
-
-		c := tcell.NewRGBColor(int32(r), int32(g), int32(b))
-		return &c
+	// parse rr, gg, bb
+	r, err := strconv.ParseInt(hex6[0:2], 16, 64)
+	if err != nil {
+		return nil
+	}
+	g, err := strconv.ParseInt(hex6[2:4], 16, 64)
+	if err != nil {
+		return nil
+	}
+	b, err := strconv.ParseInt(hex6[4:6], 16, 64)
+	if err != nil {
+		return nil
 	}
 
-	return nil
+	c := tcell.NewRGBColor(int32(r), int32(g), int32(b))
+	return &c
 }
