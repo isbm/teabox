@@ -238,7 +238,11 @@ func (tmw *TeaboxArgsMainWindow) AddInfoTextField(cmdpath string, arg *teaboxlib
 		}
 	}
 
-	tmw.Form.AddFormItem(crtview.NewInfoText(msg))
+	c := crtview.NewInfoText(msg)
+	c.SetDynamicColors(true)
+	c.SetRegions(true)
+
+	tmw.Form.AddFormItem(c)
 
 	return nil
 }
