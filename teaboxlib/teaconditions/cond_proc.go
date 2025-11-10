@@ -2,6 +2,7 @@ package teaconditions
 
 import (
 	"fmt"
+	"os"
 )
 
 // Processor of conditions.
@@ -63,7 +64,15 @@ func (cnd *TeaConditionsProcessor) GetInfoMessage() string {
 
 func (cnd *TeaConditionsProcessor) load(condition map[string][]string) (TeaCondition, error) {
 	var message string
-	if _, ok := condition["message"]; ok {
+	if _, ok := condition["textfile"]; ok {
+		filename := condition["textfile"][0]
+		messageBytes, err := os.ReadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file '%s': %v", filename, err)
+		}
+		message = string(messageBytes)
+		delete(condition, "textfile")
+	} else if _, ok := condition["message"]; ok {
 		message = condition["message"][0]
 		delete(condition, "message")
 	} else {
