@@ -76,7 +76,11 @@ func (tmw *TeaboxArgsMainWindow) SkipLoad() bool {
 func (tmw *TeaboxArgsMainWindow) SetSkipLoad(action func(), message string) {
 	tmw.skipLoad = true
 
-	tmw.AddFormItem(crtforms.NewFormTextView().SetText(message))
+	f := crtforms.NewFormTextView()
+	f.SetDynamicColors(true)
+	f.SetWordWrap(true)
+
+	tmw.AddFormItem(f.SetText(message))
 	tmw.AddButton("Close", action)
 	tmw.SetFocus(1) // Focus on 2nd element, i.e. button in this case
 }
