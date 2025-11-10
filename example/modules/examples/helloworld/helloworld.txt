@@ -2,6 +2,6 @@ This is a content of a text file, called "helloworld.txt" and
 therefore it contains extra data that does not need to be added to the
 YAML file directly. This very file was just loaded into the UI.
 
-Normally you should keep it till 80 characters wrapped so it will
+[red]Normally[/white] you should keep it till 80 characters wrapped so it will
 usually fit into most terminals. If you need more features, you can
 always open a pull request! :-)

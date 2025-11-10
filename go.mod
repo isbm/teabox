@@ -6,7 +6,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/infra-whizz/wzlib v0.0.0-20210306212611-2af49aea1704
-	github.com/isbm/crtview v1.6.3-0.20251023151121-8dacb8cc566f
+	github.com/isbm/crtview v1.6.3-0.20251110170322-8b85223f17b2
 	github.com/isbm/go-nanoconf v0.0.0-20210917204429-663038ee6e05
 	github.com/karrick/godirwalk v1.17.0
 )
