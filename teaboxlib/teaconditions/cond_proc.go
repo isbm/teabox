@@ -68,9 +68,10 @@ func (cnd *TeaConditionsProcessor) load(condition map[string][]string) (TeaCondi
 		filename := condition["textfile"][0]
 		messageBytes, err := os.ReadFile(filename)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read file '%s': %v", filename, err)
+			message = "<failed to read message file at " + filename + ">"
+		} else {
+			message = string(messageBytes)
 		}
-		message = string(messageBytes)
 		delete(condition, "textfile")
 	} else if _, ok := condition["message"]; ok {
 		message = condition["message"][0]
